@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN" data-public="true">
+<head>
+<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://iqplsqizbpyafqkzmszr.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Adrian Chen / 陈谦 — Computer Science undergraduate exploring AI for Science, embodied intelligence and automated laboratories.">
+<title>Adrian Chen — AI for Science & Embodied Intelligence</title>
+<link rel="stylesheet" href="./styles.css">
+
+<script src="./vendor/gsap.min.js" defer></script>
+<script src="./script.js" defer></script>
+<script type="module" src="./feedback.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#selected-work">跳过动态舞台，阅读项目</a>
+<header class="site-header">
+ <a class="brand" href="#identity" aria-label="Adrian Chen 首页">AC<span>.</span></a>
+ <span class="header-context">ADRIAN CHEN / RESEARCH</span>
+ <nav aria-label="主导航"><a href="#selected-work">Work</a><a href="#directions">Research</a><a href="#closing">About</a><a href="#contact">Contact</a></nav>
+ <button id="motion-toggle" type="button" hidden aria-pressed="false">阅读模式</button>
+</header>
+<main>
+<div id="story" class="story">
+ <section id="identity" class="chapter identity" tabindex="-1">
+  <h1>ADRIAN<br>CHEN<span>.</span></h1>
+  <div class="hero-copy">
+   <p class="kicker">A PERSONAL RESEARCH PORTFOLIO</p>
+   <p class="hero-focus">AI for Science<br><span>× Embodied Intelligence</span></p>
+   <p class="hero-statement">Exploring how AI systems perceive, reason,<br>and act in the physical world.</p>
+   <p class="identity-context">COMPUTER SCIENCE · ROBOTICS · LABORATORY AUTOMATION</p>
+   <a class="text-link hero-link" href="#agent">Explore my research direction ↘</a>
+   <p id="enhancement-status" class="enhancement-status" role="status">从科研目标、环境感知到物理执行与反馈。</p>
+  </div>
+ </section>
+ <section id="agent" class="chapter" tabindex="-1">
+  <p class="kicker">01 / AGENT</p>
+  <h2>From research intent<br>to executable action.</h2>
+  <p>我探索如何让科研目标成为可执行的计划。</p>
+  <p class="project-detail">研究方向 / 概念系统。</p>
+ </section>
+ <section id="perception" class="chapter" tabindex="-1">
+  <p class="kicker">02 / PERCEPTION</p>
+  <h2>Understanding<br>the experimental<br>world.</h2>
+  <p>我关注机器人如何理解目标与周围空间。</p>
+  <p class="project-detail">空间示意 / 非传感器输出。</p>
+ </section>
+ <section id="execution" class="chapter" tabindex="-1">
+  <p class="kicker">03 / EXECUTION</p>
+  <h2>From decision<br>to physical action.</h2>
+  <p>以机器人操作与自动移液，探索决策如何进入实验。</p>
+  <p class="execution-example">CR5AF Intelligent Pipetting<br><span>One exploration of laboratory execution.</span></p>
+  <p class="project-detail">展示姿态 / 非移液工具或实验轨迹。</p>
+ </section>
+ <section id="science" class="chapter science" tabindex="-1">
+  <p class="kicker">04 / DATA FEEDBACK</p>
+  <h2>Closing the loop<br>of experimentation.</h2>
+  <p class="research-emphasis">AI for Science</p>
+  <p>我探索如何让实验反馈，成为下一轮研究的起点。</p>
+  <p class="system-sequence">Agent → Perception → Execution → Data Feedback → Agent</p>
+  <p class="project-detail">长期研究方向 / 非已完成实验平台。</p>
+ </section>
+</div>
+<section id="selected-work" class="selected-work" tabindex="-1">
+ <div class="section-intro"><p class="kicker">SELECTED WORK / PRACTICE & SYSTEMS</p><h2>Where these<br>questions take shape.</h2><p>两个不同的机器人项目，<br>连接我对感知、执行与实验室自动化的探索。</p></div>
+ <article id="cr5af-project" class="project-row"><span class="project-number">01</span><div><p class="project-meta">CR5AF / EXECUTION</p><h3>CR5AF Intelligent Pipetting</h3></div><div><p>围绕机器人操作、自动移液与实验室自动化，探索将任务流程连接到物理执行。</p><p class="project-detail">研究实践聚焦执行流程；主页中的机械臂展示不代表移液轨迹或性能结果。</p><p class="project-meta">ROBOTIC MANIPULATION · AUTOMATED PIPETTING<br>LABORATORY AUTOMATION</p></div></article>
+ <article id="rm65b" class="project-row"><span class="project-number">02</span><div><p class="project-meta">RM65B / PERCEPTION → ACTION</p><h3>RM65B Vision-Guided Manipulation</h3></div><div><p>以 RealSense、手眼标定与视觉定位为基础，探索视觉引导的机器人抓取。</p><p class="project-detail">独立于 CR5AF 的真实项目。标定素材保留在项目与课程记录中；主舞台未使用 RM65B 模型。</p><p class="project-meta">REALSENSE · HAND–EYE CALIBRATION<br>VISUAL LOCALIZATION · ROBOTIC GRASPING</p></div></article>
+</section>
+<section id="directions" class="directions" tabindex="-1">
+ <div class="section-intro"><p class="kicker">RESEARCH DIRECTIONS / ONE LONG-TERM QUESTION</p><h2>Toward intelligent<br>scientific systems.</h2><p>这些方向共同指向一个问题：<br>AI 如何参与现实世界中的科学探索？</p></div>
+ <div class="direction-list">
+  <article class="direction"><span>01</span><h3>AI for Science</h3><p>让科研目标、实验与反馈形成持续学习的闭环。</p></article>
+  <article class="direction"><span>02</span><h3>Embodied<br>Intelligence</h3><p>理解智能如何通过感知与行动接触物理世界。</p></article>
+  <article class="direction"><span>03</span><h3>Robotic<br>Automation</h3><p>以机器人操作连接计划与可执行的实验流程。</p></article>
+  <article class="direction"><span>04</span><h3>Intelligent<br>Laboratories</h3><p>探索感知、执行和数据如何共同支持自动化实验室。</p></article>
+ </div>
+</section>
+<section id="closing" class="closing" tabindex="-1">
+ <p class="kicker">ABOUT / ADRIAN CHEN</p><h2>A personal path<br>into AI for Science.</h2>
+ <div class="closing-detail"><div><h3>Adrian Chen / 陈谦</h3><p>Computer Science undergraduate<br>Tianjin University × Hong Kong Polytechnic University<br>Collaborative program in Shenzhen</p></div><div><p>我正在探索 AI for Science、具身智能与实验室自动化。机器人项目是我理解这些问题的具体起点。</p></div></div>
+</section>
+<section id="contact" class="closing contact" tabindex="-1" aria-labelledby="contact-heading">
+ <p class="kicker">CONTACT / CONNECT</p>
+ <h2 id="contact-heading">Research begins<br>with a question.</h2>
+ <p>我期待围绕 AI for Science、具身智能与实验室自动化交流。</p>
+ <a class="contact-email" href="mailto:expcon@qq.com">expcon@qq.com</a>
+ <form id="feedback-form" class="feedback-form" aria-labelledby="feedback-heading">
+  <h3 id="feedback-heading">A note on this portfolio.</h3>
+  <label for="feedback-message">你有什么建议？</label>
+  <p id="feedback-help">无需登录。只提交反馈文字，供我改进主页；请勿填写密码、联系方式或其他敏感信息。</p>
+  <textarea id="feedback-message" name="message" rows="4" minlength="3" maxlength="1000" required aria-describedby="feedback-help feedback-status"></textarea>
+  <button type="submit" disabled>发送反馈 ↗</button>
+  <p id="feedback-status" role="status" aria-live="polite">启用 JavaScript 后可提交反馈，也可以通过上方邮箱联系我。</p>
+ </form>
+ <p class="contact-return"><a class="text-link" href="#identity">Back to the beginning ↗</a></p>
+ <footer>© 2026 Adrian Chen <span>PERSONAL RESEARCH PORTFOLIO / STAGE 3</span></footer>
+</section>
+</main>
+
+<noscript><p class="noscript-note">JavaScript 已关闭：当前显示完整的静态研究主页。</p></noscript>
+</body>
+</html>

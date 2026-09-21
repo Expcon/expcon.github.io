@@ -1,0 +1,41 @@
+{
+  "mode": "public-ordinary-flow",
+  "privateModels": false,
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 8053,
+      "sha256": "deed75e8a6034529bab0cf74ddb08ff3dc99d9824cb76c3ff3da5091d8a08081"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 14602,
+      "sha256": "b56c13b0949a4803d000bbb553e92a720c0777e1a79110e69c41835e1d382983"
+    },
+    {
+      "path": "script.js",
+      "bytes": 3373,
+      "sha256": "39e690dea98c1ea932c7e7a00959da32f602dd95dbed34249e81c407a4c7f373"
+    },
+    {
+      "path": "feedback.js",
+      "bytes": 2080,
+      "sha256": "d9c024643f984b1931d8a93862413d214bf9f0859d1f790c339f118e57db590f"
+    },
+    {
+      "path": "feedback-config.js",
+      "bytes": 289,
+      "sha256": "55f82e3f7e426764402970aec67223aa08e56008d0655016dac9aad0bd8f1e45"
+    },
+    {
+      "path": "vendor/gsap.min.js",
+      "bytes": 72214,
+      "sha256": "28033e449a31ebcc396e5be8b13b63152bf03094288fb5867034321927bce087"
+    },
+    {
+      "path": ".nojekyll",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
