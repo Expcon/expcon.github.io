@@ -4,6 +4,9 @@ import {DRACOLoader} from './vendor/three-addons/loaders/DRACOLoader.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 import {KEYFRAMES,CHAPTER_PROGRESS,clamp,ramp,copyAt,curveFor,stateAt,editorialAt} from './choreography.js';
 
+/* MOBILE_LITE_BEGIN */
+import {createMobileLite} from './mobile-lite.js';
+/* MOBILE_LITE_END */
 const $=id=>document.getElementById(id);
 export async function startStage(){
  const params=new URLSearchParams(location.search);
@@ -11,6 +14,10 @@ export async function startStage(){
  const preference=matchMedia('(prefers-reduced-motion: reduce)');
  const desktop=matchMedia('(min-width: 901px) and (min-height: 621px)');
  let reading=false,disposed=false,mode=false,trigger,timeline,queued=false,benchmark=null,renderCount=0;
+ /* MOBILE_LITE_BEGIN */
+ let mobile=null;
+ const phone=matchMedia('(max-width: 900px)');
+ /* MOBILE_LITE_END */
  const state={...KEYFRAMES[0]},scene=new THREE.Scene(),target=new THREE.Vector3(),point=new THREE.Vector3();
  const camera=new THREE.PerspectiveCamera(34,innerWidth/innerHeight,.02,30);
  const started=performance.now();
@@ -100,6 +107,9 @@ export async function startStage(){
   if(!queued&&!disposed&&!document.hidden){queued=true;requestAnimationFrame(draw);}
  }
  function apply(){
+  /* MOBILE_LITE_BEGIN */
+  if(mobile){mobile.apply();active=mobile.active();$('visual').dataset.frames=renderCount;return;}
+  /* MOBILE_LITE_END */
   robot.position.set(state.x,state.y,0);robot.scale.setScalar(.001*state.scale);robot.rotation.y=state.ry;
   joints.forEach((joint,i)=>joint.quaternion.copy(rest[i]).multiply(q.setFromAxisAngle(axes[i],state['j'+(i+1)])));
   camera.position.set(state.cx,state.cy,state.cz);target.set(state.tx,state.ty,state.tz);
@@ -289,6 +299,9 @@ export async function startStage(){
  }
  function configure(){
   if(disposed)return;
+  /* MOBILE_LITE_BEGIN */
+  mobile?.dispose();mobile=null;document.body.classList.remove('mobile-stage');
+  /* MOBILE_LITE_END */
   trigger?.kill();timeline?.kill();trigger=null;timeline=null;
   mode=desktop.matches&&!preference.matches&&!reading&&params.get('test')!=='reduced-motion';
   document.body.classList.toggle('desktop-stage',mode);
@@ -304,19 +317,41 @@ export async function startStage(){
    ScrollTrigger.refresh();
   }
   $('enhancement-status').textContent=mode?'CR5AF / 已获 Dobot 客服许可用于本项目展示':'静态 3D 视图 / 正文按普通文流阅读';
+  /* MOBILE_LITE_BEGIN */
+  if(!mode&&phone.matches&&!preference.matches&&!reading&&params.get('test')!=='reduced-motion'){
+   document.body.classList.add('mobile-stage');
+   mobile=createMobileLite({schedule,robot,joints,rest,axes,q,camera,target,scene,contact,spatial,volume,regionLine,frame,viewpoint,loopPaths,point});
+   $('enhancement-status').textContent='CR5AF / 轻量滚动展示 · 非实验轨迹';
+  }
+  /* MOBILE_LITE_END */
   resize();metrics();
  }
+ /* MOBILE_LITE_BEGIN */
+ phone.addEventListener('change',configure);
+ /* MOBILE_LITE_END */
  preference.addEventListener('change',configure);desktop.addEventListener('change',configure);
  addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
  const sizeObserver=new ResizeObserver(resize);sizeObserver.observe($('visual'));
  renderer.domElement.addEventListener('webglcontextlost',event=>{
   event.preventDefault();stopBenchmark();
   sizeObserver.disconnect();
+  /* MOBILE_LITE_BEGIN */
+  mobile?.dispose();mobile=null;document.body.classList.remove('mobile-stage');
+  /* MOBILE_LITE_END */
   disposed=true;trigger?.kill();timeline?.kill();clearChapters();
   document.body.classList.remove('enhanced','desktop-stage');renderer.domElement.remove();
   $('enhancement-status').textContent='3D 上下文已丢失，已恢复完整静态阅读。';$('motion-toggle').hidden=true;
  });
  $('audit').addEventListener('click',()=>{
+  /* MOBILE_LITE_BEGIN */
+  if(mobile){
+   const samples=[];let reverseError=0,minMotion=Infinity;
+   for(let i=0;i<=100;i++){mobile.apply(i/100);const view=JSON.parse($('visual').dataset.state);samples.push([...view.camera,...view.robot,...view.joints.flat()]);}
+   for(let i=100;i>=0;i--){mobile.apply(i/100);const view=JSON.parse($('visual').dataset.state);[...view.camera,...view.robot,...view.joints.flat()].forEach((v,k)=>{reverseError=Math.max(reverseError,Math.abs(v-samples[i][k]));});}
+   for(let i=1;i<samples.length;i++)minMotion=Math.min(minMotion,Math.max(...samples[i].map((v,k)=>Math.abs(v-samples[i-1][k]))));
+   mobile.apply();schedule();metrics({audit:{mode:'mobile',samples:101,reverseError,minMotion,pass:reverseError<1e-6&&minMotion>0},scrollDistance:mobile.bounds().distance});return;
+  }
+  /* MOBILE_LITE_END */
   if(!timeline){metrics({audit:'普通文流模式，无滚动绑定'});return;}
   const saved=timeline.progress(),fingerprints=[],screens=[];let reverseError=0,pureError=0,minPx=Infinity,maxMainStatements=0,finiteLoop=true;
   const fingerprint=()=>[...camera.position.toArray(),...target.toArray(),...robot.position.toArray(),state.scale,...joints.flatMap(j=>j.quaternion.toArray()),...spatialFingerprint,...loopFingerprint];
@@ -338,7 +373,7 @@ export async function startStage(){
  renderer.setSize(innerWidth,innerHeight);robot.scale.setScalar(.001);camera.position.set(1.65,1.12,2.02);camera.lookAt(0,.5,0);renderer.render(scene,camera);
  $('canvas-host').appendChild(renderer.domElement);document.body.classList.add('enhanced');configure();
  return{
-  scrollPosition(id){return !disposed&&mode&&trigger&&Object.hasOwn(CHAPTER_PROGRESS,id)?trigger.start+CHAPTER_PROGRESS[id]*(trigger.end-trigger.start):null;},
+  scrollPosition(id){/* MOBILE_LITE_BEGIN */if(mobile)return mobile.scrollPosition(id);/* MOBILE_LITE_END */return !disposed&&mode&&trigger&&Object.hasOwn(CHAPTER_PROGRESS,id)?trigger.start+CHAPTER_PROGRESS[id]*(trigger.end-trigger.start):null;},
   setReading(value){const id=active;reading=value;configure();if(value)requestAnimationFrame(()=>$(id).scrollIntoView({block:'start',behavior:'instant'}));}
  };
 }

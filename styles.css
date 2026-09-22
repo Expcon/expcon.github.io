@@ -97,3 +97,51 @@ h2{font-size:clamp(35px,4.1vw,66px);font-weight:500;line-height:1.05;letter-spac
 .desktop-stage.render-depth .object-caption small{font:9px Arial,sans-serif;color:var(--muted)}
 
 .feedback-form{max-width:640px;padding:35px 0 20px;border-top:1px solid #495143;margin-bottom:40px}.feedback-form h3{font-size:28px;letter-spacing:-.03em}.feedback-form label{display:block;font-size:15px}.feedback-form p{font-size:13px;color:#b9c0b0;line-height:1.7}.feedback-form textarea{display:block;resize:vertical;width:100%;min-height:130px;background:#292f29;color:#eceee5;border:1px solid #727b6b;padding:14px;font:16px/1.6 Arial,sans-serif;border-radius:0}.feedback-form textarea:focus-visible{outline:2px solid #d59474;outline-offset:3px}.feedback-form button{margin-top:18px;min-height:44px;padding:10px 20px;background:#eceee5;color:#222922;border:0}.feedback-form button:disabled{opacity:.55;cursor:default}#feedback-status{min-height:23px;margin:14px 0}
+
+/* MOBILE_LITE_BEGIN: additive phone layout; no desktop selector changes. */
+@media(max-width:900px){
+ .mobile-stage .story{height:250svh;position:relative;overflow-anchor:none}
+ .mobile-stage.enhanced .visual{display:block;position:sticky;top:0;height:100svh;max-height:none;min-height:0;overflow:clip;background:radial-gradient(ellipse at 60% 43%,#fbfaf4,#f0efe8 75%,#e4e5dc)}
+ .mobile-stage .site-header{position:absolute}
+ .mobile-stage .chapter{position:absolute;z-index:2;top:0;left:0;width:100%;height:100svh;max-width:none;padding:0 6%;margin:0;border:0;visibility:hidden;pointer-events:none}
+ .mobile-stage .chapter>*{pointer-events:auto}
+ .mobile-stage .identity{visibility:visible;padding-top:20svh}
+ .mobile-stage .identity h1{font-size:21vw;line-height:.85;margin:0;transform-origin:left top}
+ .mobile-stage .hero-copy{position:absolute;inset:0;pointer-events:none}
+ .mobile-stage .hero-copy>*{position:absolute;left:6%;right:6%;margin:0;pointer-events:auto}
+ .mobile-stage .hero-copy .kicker{top:17svh;font-size:8px}
+ .mobile-stage .hero-focus{bottom:16svh;font-size:20px}
+ .mobile-stage .hero-statement{bottom:7svh;font-size:12px;line-height:1.5;max-width:90%}
+ .mobile-stage .identity-context,.mobile-stage .hero-link,.mobile-stage .enhancement-status{display:none}
+ .mobile-stage .chapter:not(.identity){padding-top:76svh;background:linear-gradient(to bottom,transparent 72%,#f3f1eaf5 79%)}
+ .mobile-stage .chapter:not(.identity) h2{font-size:clamp(24px,7vw,34px);line-height:1.05;max-width:100%;margin:0 0 12px}
+ .mobile-stage .chapter:not(.identity) p{font-size:12px;line-height:1.5;margin:0}
+ .mobile-stage .chapter>.kicker,.mobile-stage .chapter>.project-detail,.mobile-stage .execution-example,.mobile-stage .research-emphasis,.mobile-stage .system-sequence{display:none}
+ .mobile-stage #shot-type{display:block;position:absolute;inset:0;z-index:0;pointer-events:none}
+ .mobile-stage #shot-type span{display:block;position:absolute;top:8svh;left:6%;font-size:20vw;letter-spacing:-.065em;line-height:.9;font-weight:500;max-width:88%}
+ .mobile-stage #shot-type[data-shot="perception"] span,.mobile-stage #shot-type[data-shot="execution"] span{font-size:12.5vw}
+ .mobile-stage #shot-type[data-shot="science"] span{font-size:16vw;max-width:85%}
+ .mobile-stage #canvas-host{z-index:1}
+ .mobile-stage .visual-overlay{display:block;position:absolute;inset:0;z-index:2;pointer-events:none}
+ .mobile-stage .object-caption{display:block;right:6%;bottom:3svh;font:8px Arial,sans-serif;letter-spacing:0}
+ .mobile-stage .object-caption>span{display:none}.mobile-stage .object-caption small{font-size:8px;margin:0}
+ .mobile-stage #concept-note{display:block;top:auto;bottom:3svh;left:6%;right:auto;font:8px Arial,sans-serif;opacity:1}
+ .mobile-stage .layer-index,.mobile-stage .system-node small{display:none}
+ .mobile-stage .planning strong,.mobile-stage .perception-field strong,.mobile-stage .system-node strong{font:10px var(--mono);margin:0}
+ .mobile-stage .planning,.mobile-stage .perception-field,.mobile-stage .system-node{transform:translate(-50%,-50%)}
+ .mobile-stage #system-links{overflow:hidden}.mobile-stage #system-links path{stroke-width:.7}
+ .mobile-stage #planning-trace,.mobile-stage #agent-perception,.mobile-stage #execution-feedback,.mobile-stage #action-point{display:none}
+ .mobile-stage #stage-footer{display:none}
+}
+@media(max-width:900px) and (max-height:500px) and (orientation:landscape){
+ .mobile-stage .identity h1{font-size:12vw;max-width:45%;margin-top:1svh}
+ .mobile-stage .identity{padding-top:22svh}
+ .mobile-stage .hero-copy .kicker{display:none}.mobile-stage .hero-focus{font-size:16px;bottom:18svh;right:55%}
+ .mobile-stage .hero-statement{font-size:10px;bottom:6svh;right:53%}
+ .mobile-stage .chapter:not(.identity){padding-top:57svh;padding-right:56%}
+ .mobile-stage .chapter:not(.identity) h2{font-size:23px}.mobile-stage .chapter:not(.identity) p{font-size:10px}
+ .mobile-stage #shot-type span{font-size:11vw;max-width:88%}
+ .mobile-stage #shot-type[data-shot="perception"] span,.mobile-stage #shot-type[data-shot="execution"] span{font-size:9vw}
+ .mobile-stage #shot-type[data-shot="science"] span{font-size:8vw}
+}
+/* MOBILE_LITE_END */
