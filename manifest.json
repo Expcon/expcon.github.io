@@ -1,30 +1,29 @@
 {
-  "mode": "public-cinematic-published-geometry",
-  "privateModels": false,
+  "mode": "accepted-v2-cinematic-project-authorized-model",
   "conceptModel": false,
   "geometry": {
-    "path": "assets/cr5af-official.glb",
-    "source": "github.com/Dobot-Arm/DOBOT_6Axis_ROS2_V4",
-    "commit": "ec201c40d5db63185a3593ec9c39f80fe25aa527",
-    "license": "MIT",
-    "sha256": "75e4b4d47a039fd3c658381234a2224079998b377b77bc1ffcf7819a8939a337"
+    "path": "assets/cr5af-authorized.glb",
+    "bytes": 3564832,
+    "sha256": "a3a0bd67815101c09b4df42a70f32bdff756865ceb3dddf44998770625b24b21",
+    "source": "DobotStudio installation asset",
+    "permission": "Dobot customer-service permission for this project, confirmed by owner"
   },
   "stage": "one scene, one canvas, one master timeline",
   "files": [
     {
       "path": "index.html",
-      "bytes": 10209,
-      "sha256": "8621d1dd698deca29b2404fb773d60df93460c78b19364a6a02a5afc9d10a7b9"
+      "bytes": 10202,
+      "sha256": "9dcedffd408116947ad157e2fb07e0368dea3e2bc8731fd573c1d593d7c53751"
     },
     {
       "path": "styles.css",
-      "bytes": 14754,
-      "sha256": "c8fe1f2e7d9516506d90a81cfe1929f2c2d4396b3fd609a8f97fe5ecac76a830"
+      "bytes": 14612,
+      "sha256": "8d603dad6505b56e22839de9103aeed2b5ab682b6e9f6420fc5a917f099be0c0"
     },
     {
       "path": "script.js",
-      "bytes": 4319,
-      "sha256": "6715d400289d446468db028392a0b6f9a55721970d552c1e3ed4b7eb79754d14"
+      "bytes": 4027,
+      "sha256": "b3e78b5d088342829af4e8f6263366b2e4d3686b375c50f13878babdb5cdf55a"
     },
     {
       "path": "feedback.js",
@@ -38,48 +37,33 @@
     },
     {
       "path": "choreography.js",
-      "bytes": 2659,
-      "sha256": "20eabad62807add5a90bc8585aaf09e3f9d6220bae6f5b7d6a726a1b24c4880e"
-    },
-    {
-      "path": "cr5af-label.js",
-      "bytes": 1031,
-      "sha256": "9a64961b19ec43c40cf3864016bcfba7bd19d973f991a4ccae053ea4785a4c04"
-    },
-    {
-      "path": "cr5af-official.js",
-      "bytes": 1749,
-      "sha256": "30e9aa3908db074f5f3661e1b0ea50a5e0da63b13eb75853afbecdb54553a73e"
+      "bytes": 2621,
+      "sha256": "fd1cf80ec778b8b5ee3b8aab7c9b860d15d216db6037704c78ea90d014fe333a"
     },
     {
       "path": "robot-stage.js",
-      "bytes": 25988,
-      "sha256": "ccecc11f3cb64332b83c49e8fc2721c67a46a0f4649fc10e72d7edd5c4b99818"
+      "bytes": 25227,
+      "sha256": "752ecbdebfdb1c9811e8a73a0314a95f81b480b9483fb765e2bcf9d42871b4bc"
     },
     {
-      "path": "assets/cr5af-official.glb",
-      "bytes": 1148116,
-      "sha256": "75e4b4d47a039fd3c658381234a2224079998b377b77bc1ffcf7819a8939a337"
+      "path": "assets/cr5af-authorized.glb",
+      "bytes": 3564832,
+      "sha256": "a3a0bd67815101c09b4df42a70f32bdff756865ceb3dddf44998770625b24b21"
     },
     {
-      "path": "docs/licenses/THIRD_PARTY_NOTICES.md",
-      "bytes": 4920,
-      "sha256": "aebd77b81388602539bb4572867592fd0f5835b1b0efc6c3c639760228c4e250"
-    },
-    {
-      "path": "docs/licenses/dobot-CR5AF-MIT.txt",
-      "bytes": 3501,
-      "sha256": "43bfebc4b5573d0a7ca2458c71739a228f419951d7568c670879e45006c99b6e"
+      "path": "docs/licenses/CR5AF_PROJECT_USAGE.md",
+      "bytes": 1461,
+      "sha256": "ff1133877488e853bdf729d1b4febe6ba1777a927596adfc6493fdb42087f0a6"
     },
     {
       "path": "vendor/gsap.min.js",
-      "bytes": 72214,
-      "sha256": "28033e449a31ebcc396e5be8b13b63152bf03094288fb5867034321927bce087"
+      "bytes": 72225,
+      "sha256": "9d6dd3499d49b3f3bc9ddf1754535134354bf787fcd6029beabaf630bf69be44"
     },
     {
       "path": "vendor/ScrollTrigger.min.js",
-      "bytes": 43380,
-      "sha256": "ad33c2df9ada8a663c2147357828f980d0b7ca731ef33eb3c6e4f327c3b2cda5"
+      "bytes": 43391,
+      "sha256": "c1f5b4a203f8e5aa30c5e41fd4d8bfbfaf1b5e5aaa062f96015fbef3830c7b31"
     },
     {
       "path": "vendor/three.module.min.js",
@@ -102,14 +86,14 @@
       "sha256": "43ab370ba984b453bb160428bad0eb7beedb8e5de5df66ef6040fff8e1020d14"
     },
     {
+      "path": "vendor/three-addons/loaders/DRACOLoader.js",
+      "bytes": 19050,
+      "sha256": "38d52e3ed3bea38de5cc6b762c93c1f499b467d60303d9b2d05e9baafd1ce737"
+    },
+    {
       "path": "vendor/three-addons/utils/BufferGeometryUtils.js",
       "bytes": 37641,
       "sha256": "236155b53956af0c778b4e72af1097f77c5d7c0adb1c8cb205491f48fcc8d5f4"
-    },
-    {
-      "path": "vendor/three-addons/utils/SkeletonUtils.js",
-      "bytes": 11555,
-      "sha256": "b9ce558a98772a46dc67816d27e629a9810e41d1fd968eb96bdbfc8dbfb959f2"
     },
     {
       "path": "vendor/three-LICENSE.txt",
@@ -117,9 +101,39 @@
       "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
     },
     {
+      "path": "vendor/draco/draco_decoder.js",
+      "bytes": 512465,
+      "sha256": "8625489da79a805f4f2a7d511c3e52d8b4085608a9d2a4d5f4f9de5db0aea04f"
+    },
+    {
+      "path": "vendor/draco/draco_wasm_wrapper.js",
+      "bytes": 58456,
+      "sha256": "8bb2952d2ba7d67e1414f8df819410cb0434a666be53f671fff75f68843d76f6"
+    },
+    {
+      "path": "vendor/draco/draco_decoder.wasm",
+      "bytes": 192420,
+      "sha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac"
+    },
+    {
+      "path": "vendor/draco-NOTICE.txt",
+      "bytes": 1395,
+      "sha256": "839850a67c93f6b26d3cc038a45bd8289e3cfdf15531e69339e8eb1282b4eb76"
+    },
+    {
       "path": ".nojekyll",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/draco-LICENSE.txt",
+      "bytes": 13898,
+      "sha256": "d3709b0fb4b8a94bbb1d02b8a2e484f258b0d9c5c5a01f940391f3fe662cd1a4"
+    },
+    {
+      "path": "vendor/three-addons/utils/SkeletonUtils.js",
+      "bytes": 11555,
+      "sha256": "b9ce558a98772a46dc67816d27e629a9810e41d1fd968eb96bdbfc8dbfb959f2"
     }
   ]
 }

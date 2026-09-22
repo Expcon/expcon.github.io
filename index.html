@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN" data-public="true">
 <head>
-<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://iqplsqizbpyafqkzmszr.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://iqplsqizbpyafqkzmszr.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Adrian Chen / 陈谦 — Computer Science undergraduate exploring AI for Science, embodied intelligence and automated laboratories.">
 <title>Adrian Chen — AI for Science & Embodied Intelligence</title>
 <link rel="stylesheet" href="./styles.css">
@@ -9,6 +9,7 @@
 <script src="./vendor/gsap.min.js" defer></script><script src="./vendor/ScrollTrigger.min.js" defer></script>
 <script src="./script.js" defer></script>
 <script type="module" src="./feedback.js"></script>
+<link rel="license" href="./docs/licenses/CR5AF_PROJECT_USAGE.md">
 </head>
 <body>
 <a class="skip-link" href="#selected-work">跳过动态舞台，阅读项目</a>
@@ -33,7 +34,7 @@
  </section>
  <div id="visual" class="visual" aria-label="AI for Science 概念系统舞台">
   <div id="shot-type" aria-hidden="true"><span></span></div>
-  <div id="canvas-host" role="img" aria-label="Dobot 公开发布的 CR5AF 几何（MIT 许可）作为物理执行的视觉锚点，展示姿态而非实验轨迹；与 Dobot 无隶属或背书关系"></div>
+  <div id="canvas-host" role="img" aria-label="同一真实 CR5AF 作为物理执行的视觉锚点，展示姿态而非实验轨迹"></div>
   <div class="visual-overlay" aria-hidden="true">
    <div id="planning" class="planning">
     <span class="layer-index">RESEARCH INTENT</span>
@@ -47,7 +48,7 @@
    </svg>
    <div id="execution-node" class="system-node"><small>PHYSICAL ACTION</small><strong>EXECUTION</strong></div>
    <div id="feedback-node" class="system-node"><small>OBSERVE & REVISE</small><strong>DATA FEEDBACK</strong></div>
-    <div class="object-caption"><span>CR5AF · PUBLISHED GEOMETRY (MIT)</span><small>Dobot 公开 ROS 包几何 · 展示姿态 · 非实验轨迹 · 非 Dobot 背书</small></div>
+   <div class="object-caption"><span>CR5AF · physical execution study</span><small>原模型 · 展示姿态 · 非实验轨迹</small></div>
    <i id="release-rule"></i>
    <span id="concept-note">Conceptual system · 非测量输出</span>
   </div>
@@ -113,11 +114,10 @@
   <p id="feedback-status" role="status" aria-live="polite">启用 JavaScript 后可提交反馈，也可以通过上方邮箱联系我。</p>
  </form>
  <p class="contact-return"><a class="text-link" href="#identity">Back to the beginning ↗</a></p>
-  <p class="asset-credit">机械臂几何：Dobot 公开发布的 CR5AF 模型（MIT，commit ec201c40）· 独立项目，与 Dobot 无隶属或背书 · <a href="./docs/licenses/THIRD_PARTY_NOTICES.md">第三方许可与出处 ↗</a></p>
-  <footer>© 2026 Adrian Chen <span>PERSONAL RESEARCH PORTFOLIO / STAGE 3</span></footer>
+ <footer>© 2026 Adrian Chen <span>PERSONAL RESEARCH PORTFOLIO / STAGE 2</span></footer>
 </section>
 </main>
-
+<details id="study-controls" hidden><summary>开发验证</summary><button id="audit">检查滚动与反向</button><button id="benchmark">5秒渲染采样</button><output id="metrics"></output></details>
 <noscript><p class="noscript-note">JavaScript 已关闭：当前显示完整的静态研究主页。</p></noscript>
 </body>
 </html>

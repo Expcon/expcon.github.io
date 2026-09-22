@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.min.js';
+import {GLTFLoader} from './vendor/three-addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from './vendor/three-addons/loaders/DRACOLoader.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
-import {createStageModel} from './cr5af-official.js';
 import {KEYFRAMES,CHAPTER_PROGRESS,clamp,ramp,copyAt,curveFor,stateAt,editorialAt} from './choreography.js';
 
 const $=id=>document.getElementById(id);
@@ -22,32 +23,28 @@ export async function startStage(){
  const hemisphere=new THREE.HemisphereLight(0xffffff,0x7c826b);scene.add(hemisphere);
  const light=new THREE.DirectionalLight(0xfff8ed);scene.add(light);
  const rim=new THREE.DirectionalLight(0xe5ebf0);scene.add(rim);
- // Model-agnostic stage: the authoring frame arrives as the Y-up, millimetre, base-at-origin rig
- // described by cr5af-official.js, which is the single source of the CR5AF geometry for both local
- // development and the public build. Every shot below stays shared.
+ const draco=new DRACOLoader().setDecoderPath('./vendor/draco/').setWorkerLimit(2);
+ const loader=new GLTFLoader().setDRACOLoader(draco);
  let model;
- try{model=await createStageModel();}
- catch(error){environment.dispose();renderer.dispose();throw error;}
- const robot=model.robot,joints=model.joints,shells=model.shells??[],label=model.label;
- if(!robot||!Array.isArray(joints)||joints.some(j=>!j)){environment.dispose();renderer.dispose();throw Error('Six-axis joint contract J1–J6 unavailable');}
- if(!label?.caption){environment.dispose();renderer.dispose();throw Error('Model disclosure label unavailable');}
+ try{model=await loader.loadAsync(params.get('test')==='model-fail'?'./assets/missing.glb':'./assets/cr5af-authorized.glb');}
+ catch(error){draco.dispose();environment.dispose();renderer.dispose();throw error;}
+ draco.dispose();
+ const robot=model.scene,joints=Array.from({length:6},(_,i)=>robot.getObjectByName('J'+(i+1)));
+ if(joints.some(j=>!j)){environment.dispose();renderer.dispose();throw Error('Original J1–J6 hierarchy unavailable');}
  const rest=joints.map(j=>j.quaternion.clone());
  const axes=joints.map((_,i)=>i===0||i===4?new THREE.Vector3(0,1,0):new THREE.Vector3(0,0,1));
  const q=new THREE.Quaternion();
+ robot.name='CR5AF-persistent-object';scene.add(robot);
+ // Preserve authored color, metalness and flange response. Shared materials are tuned once.
  const materials=new Set();robot.traverse(node=>{if(node.isMesh)for(const m of [].concat(node.material))materials.add(m);});
- // The stage always relabels the object it is actually showing; the public build also
- // hard-codes the safe wording so a static or no-JS view never implies the private model.
- const caption=document.querySelector('.object-caption');
- if(caption){caption.querySelector('span').textContent=label.caption;caption.querySelector('small').textContent=label.note;}
- $('canvas-host')?.setAttribute('aria-label',label.canvas);
- robot.name=model.source;scene.add(robot);
+ const shells=[...materials].filter(m=>['机身白','机身白.003','定白.003'].includes(m.name));
  // Illustrative contact only: anchored to the real base, not a computed arm shadow.
  const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
  const context=shadowCanvas.getContext('2d'),gradient=context.createRadialGradient(64,64,8,64,64,64);
  gradient.addColorStop(0,'rgba(37,43,38,.27)');gradient.addColorStop(.28,'rgba(37,43,38,.15)');gradient.addColorStop(1,'rgba(37,43,38,0)');
  context.fillStyle=gradient;context.fillRect(0,0,128,128);
  const contactTexture=new THREE.CanvasTexture(shadowCanvas);contactTexture.colorSpace=THREE.SRGBColorSpace;
- const contact=new THREE.Mesh(new THREE.PlaneGeometry(...(model.contact??[.52,.44])),new THREE.MeshBasicMaterial({map:contactTexture,transparent:true,depthWrite:false,toneMapped:false}));
+ const contact=new THREE.Mesh(new THREE.PlaneGeometry(.52,.44),new THREE.MeshBasicMaterial({map:contactTexture,transparent:true,depthWrite:false,toneMapped:false}));
  contact.rotation.x=-Math.PI/2;scene.add(contact);
  function setRendering(h){
   scene.environmentIntensity=h?.46:.6;scene.environmentRotation.y=h?.45:0;hemisphere.intensity=h?.20:.4;
@@ -145,7 +142,7 @@ export async function startStage(){
    $('phase').textContent=['ADRIAN / AI FOR SCIENCE','01 / AGENT','02 / PERCEPTION','03 / EXECUTION','04 / DATA FEEDBACK'][copy.index];
    $('progress').textContent=String(Math.round(p*100)).padStart(3,'0')+'%';$('progress-fill').style.width=p*100+'%';
   }
-  $('visual').dataset.state=JSON.stringify({p:state.p,scrollY,active,mode:mode?'desktop':'flow',camera:camera.position.toArray(),target:target.toArray(),robot:robot.position.toArray(),scale:state.scale,nameContract:ramp(state.p,0,.18),joints:joints.map((_,i)=>state['j'+(i+1)]),canvasCount:document.querySelectorAll('canvas').length,object:robot.uuid,model:model.source,spatial:spatialFingerprint,loop:loopFingerprint,loopClosed:state.p>=.94});
+  $('visual').dataset.state=JSON.stringify({p:state.p,scrollY,active,mode:mode?'desktop':'flow',camera:camera.position.toArray(),target:target.toArray(),robot:robot.position.toArray(),scale:state.scale,nameContract:ramp(state.p,0,.18),joints:joints.map((_,i)=>state['j'+(i+1)]),canvasCount:document.querySelectorAll('canvas').length,object:robot.uuid,spatial:spatialFingerprint,loop:loopFingerprint,loopClosed:state.p>=.94});
  }
  function updateWorld(p){
   const rect=$('visual').getBoundingClientRect(),w=rect.width,h=rect.height;
@@ -217,7 +214,7 @@ export async function startStage(){
  }
  function stopBenchmark(){
   benchmark?.pending.forEach(({query})=>gl.deleteQuery(query));
-  benchmark=null;const control=$('benchmark');if(control)control.disabled=false;setRendering(polished);
+  benchmark=null;$('benchmark').disabled=false;setRendering(polished);
  }
  function measuredRender(sample,variant,pair){
   let query;
@@ -279,9 +276,8 @@ export async function startStage(){
   }
  }
  function metrics(extra={}){
-  const value={loadMs:+loadMs.toFixed(1),firstFrameMs:+firstFrameMs.toFixed(1),modelBytes:model.bytes,modelSource:model.source,triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,viewport:[innerWidth,innerHeight],dpr:renderer.getPixelRatio(),rendering:{variant:polished?'I':'G-lighting-control',fov:camera.fov,exposure:renderer.toneMappingExposure,environmentIntensity:scene.environmentIntensity,contact:polished?'illustrative base contact':'none',materials:[...materials].map(m=>({name:m.name,roughness:m.roughness,metalness:m.metalness,color:m.color?.getHexString()}))},scrollDistance:trigger?trigger.end-trigger.start:0,renderCount,fpsSample,...extra};
-  const output=$('metrics');if(!output)return;
-  output.textContent=JSON.stringify(value,null,2);
+  const value={loadMs:+loadMs.toFixed(1),firstFrameMs:+firstFrameMs.toFixed(1),modelBytes:3564832,triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,viewport:[innerWidth,innerHeight],dpr:renderer.getPixelRatio(),rendering:{variant:polished?'I':'G-lighting-control',fov:camera.fov,exposure:renderer.toneMappingExposure,environmentIntensity:scene.environmentIntensity,contact:polished?'illustrative base contact':'none',materials:[...materials].map(m=>({name:m.name,roughness:m.roughness,metalness:m.metalness,color:m.color?.getHexString()}))},scrollDistance:trigger?trigger.end-trigger.start:0,renderCount,fpsSample,...extra};
+  $('metrics').textContent=JSON.stringify(value,null,2);
  }
  function resize(){
   const rect=$('visual').getBoundingClientRect();if(!rect.width||!rect.height)return;
@@ -307,7 +303,7 @@ export async function startStage(){
    trigger=ScrollTrigger.create({trigger:'#story',start:'top top',end:'bottom bottom',scrub:true,animation:timeline,invalidateOnRefresh:true});
    ScrollTrigger.refresh();
   }
-  $('enhancement-status').textContent=mode?label.status:'静态 3D 视图 / 正文按普通文流阅读';
+  $('enhancement-status').textContent=mode?'CR5AF / 已获 Dobot 客服许可用于本项目展示':'静态 3D 视图 / 正文按普通文流阅读';
   resize();metrics();
  }
  preference.addEventListener('change',configure);desktop.addEventListener('change',configure);
@@ -320,8 +316,7 @@ export async function startStage(){
   document.body.classList.remove('enhanced','desktop-stage');renderer.domElement.remove();
   $('enhancement-status').textContent='3D 上下文已丢失，已恢复完整静态阅读。';$('motion-toggle').hidden=true;
  });
- // Local QA hooks are absent from the public build, so they are optional here.
- $('audit')?.addEventListener('click',()=>{
+ $('audit').addEventListener('click',()=>{
   if(!timeline){metrics({audit:'普通文流模式，无滚动绑定'});return;}
   const saved=timeline.progress(),fingerprints=[],screens=[];let reverseError=0,pureError=0,minPx=Infinity,maxMainStatements=0,finiteLoop=true;
   const fingerprint=()=>[...camera.position.toArray(),...target.toArray(),...robot.position.toArray(),state.scale,...joints.flatMap(j=>j.quaternion.toArray()),...spatialFingerprint,...loopFingerprint];
@@ -336,7 +331,7 @@ export async function startStage(){
   for(let i=1;i<screens.length;i++)minPx=Math.min(minPx,Math.max(...screens[i].map((v,k)=>Math.hypot(v[0]-screens[i-1][k][0],v[1]-screens[i-1][k][1]))));
   timeline.progress(saved);apply();schedule();metrics({audit:{samples:101,reverseError,pureError,finiteLoop,maxMainStatements,minLargestJointMovementPxPer1Percent:minPx,pass:finiteLoop&&reverseError<1e-6&&pureError<1e-5&&minPx>0&&maxMainStatements===1}});
  });
- $('benchmark')?.addEventListener('click',()=>{
+ $('benchmark').addEventListener('click',()=>{
   benchmark={start:performance.now(),last:0,frames:[],cpu:[],gpu:[],pending:[],disjoint:false,paired:params.has('qa')&&params.get('compare')==='1',variants:{G:{cpu:[],gpu:[]},I:{cpu:[],gpu:[]}},viewport:[innerWidth,innerHeight]};$('benchmark').disabled=true;schedule();
  });
  // Only enable the enhanced layout after a real model has rendered successfully.

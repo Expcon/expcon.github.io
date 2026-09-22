@@ -4,8 +4,7 @@
  const status=document.getElementById('enhancement-status');
  const params=new URLSearchParams(location.search);
  button.hidden=false;
- const study=document.getElementById('study-controls');
- if(params.has('qa')&&study)study.hidden=false;
+ if(params.has('qa')) document.getElementById('study-controls').hidden=false;
  let controller;
  const preference=matchMedia('(prefers-reduced-motion: reduce)');
  let travel=null,arrival=0,destination=null,restoreOnEnhance=true;
@@ -51,9 +50,6 @@
   button.textContent=reading?'启用动态':'阅读模式';
   controller?.setReading(reading);
  });
- // Cinematic stage enhancement. The same orchestration, timeline, navigation and disclosure
- // logic run locally and on the public build; both load the published CR5AF geometry through
- // cr5af-official.js, which is the only model source.
  if(!window.gsap || !window.ScrollTrigger) {
   status.textContent='当前为静态阅读模式：动画资源未加载，全部项目内容仍可阅读。';button.hidden=true;return;
  }
