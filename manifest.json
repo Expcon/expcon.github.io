@@ -1,21 +1,30 @@
 {
-  "mode": "public-ordinary-flow",
+  "mode": "public-cinematic-published-geometry",
   "privateModels": false,
+  "conceptModel": false,
+  "geometry": {
+    "path": "assets/cr5af-official.glb",
+    "source": "github.com/Dobot-Arm/DOBOT_6Axis_ROS2_V4",
+    "commit": "ec201c40d5db63185a3593ec9c39f80fe25aa527",
+    "license": "MIT",
+    "sha256": "75e4b4d47a039fd3c658381234a2224079998b377b77bc1ffcf7819a8939a337"
+  },
+  "stage": "one scene, one canvas, one master timeline",
   "files": [
     {
       "path": "index.html",
-      "bytes": 8053,
-      "sha256": "deed75e8a6034529bab0cf74ddb08ff3dc99d9824cb76c3ff3da5091d8a08081"
+      "bytes": 10209,
+      "sha256": "8621d1dd698deca29b2404fb773d60df93460c78b19364a6a02a5afc9d10a7b9"
     },
     {
       "path": "styles.css",
-      "bytes": 14602,
-      "sha256": "b56c13b0949a4803d000bbb553e92a720c0777e1a79110e69c41835e1d382983"
+      "bytes": 14754,
+      "sha256": "c8fe1f2e7d9516506d90a81cfe1929f2c2d4396b3fd609a8f97fe5ecac76a830"
     },
     {
       "path": "script.js",
-      "bytes": 3373,
-      "sha256": "39e690dea98c1ea932c7e7a00959da32f602dd95dbed34249e81c407a4c7f373"
+      "bytes": 4319,
+      "sha256": "6715d400289d446468db028392a0b6f9a55721970d552c1e3ed4b7eb79754d14"
     },
     {
       "path": "feedback.js",
@@ -28,9 +37,84 @@
       "sha256": "55f82e3f7e426764402970aec67223aa08e56008d0655016dac9aad0bd8f1e45"
     },
     {
+      "path": "choreography.js",
+      "bytes": 2659,
+      "sha256": "20eabad62807add5a90bc8585aaf09e3f9d6220bae6f5b7d6a726a1b24c4880e"
+    },
+    {
+      "path": "cr5af-label.js",
+      "bytes": 1031,
+      "sha256": "9a64961b19ec43c40cf3864016bcfba7bd19d973f991a4ccae053ea4785a4c04"
+    },
+    {
+      "path": "cr5af-official.js",
+      "bytes": 1749,
+      "sha256": "30e9aa3908db074f5f3661e1b0ea50a5e0da63b13eb75853afbecdb54553a73e"
+    },
+    {
+      "path": "robot-stage.js",
+      "bytes": 25988,
+      "sha256": "ccecc11f3cb64332b83c49e8fc2721c67a46a0f4649fc10e72d7edd5c4b99818"
+    },
+    {
+      "path": "assets/cr5af-official.glb",
+      "bytes": 1148116,
+      "sha256": "75e4b4d47a039fd3c658381234a2224079998b377b77bc1ffcf7819a8939a337"
+    },
+    {
+      "path": "docs/licenses/THIRD_PARTY_NOTICES.md",
+      "bytes": 4920,
+      "sha256": "aebd77b81388602539bb4572867592fd0f5835b1b0efc6c3c639760228c4e250"
+    },
+    {
+      "path": "docs/licenses/dobot-CR5AF-MIT.txt",
+      "bytes": 3501,
+      "sha256": "43bfebc4b5573d0a7ca2458c71739a228f419951d7568c670879e45006c99b6e"
+    },
+    {
       "path": "vendor/gsap.min.js",
       "bytes": 72214,
       "sha256": "28033e449a31ebcc396e5be8b13b63152bf03094288fb5867034321927bce087"
+    },
+    {
+      "path": "vendor/ScrollTrigger.min.js",
+      "bytes": 43380,
+      "sha256": "ad33c2df9ada8a663c2147357828f980d0b7ca731ef33eb3c6e4f327c3b2cda5"
+    },
+    {
+      "path": "vendor/three.module.min.js",
+      "bytes": 365552,
+      "sha256": "86bcee248b64f44bcfc23c331ae74619061957d59cab040171dcb6fb5900beb6"
+    },
+    {
+      "path": "vendor/three.core.min.js",
+      "bytes": 385386,
+      "sha256": "05b2609338c76cd65daf74f3ac515bc9a5045e1b3b33edc07d8c9bd55250fa90"
+    },
+    {
+      "path": "vendor/RoomEnvironment.js",
+      "bytes": 4976,
+      "sha256": "b0b99e33f989c48392d1dbc1d4272d22937bc17949299ffbad6c38b1c427a1f0"
+    },
+    {
+      "path": "vendor/three-addons/loaders/GLTFLoader.js",
+      "bytes": 114979,
+      "sha256": "43ab370ba984b453bb160428bad0eb7beedb8e5de5df66ef6040fff8e1020d14"
+    },
+    {
+      "path": "vendor/three-addons/utils/BufferGeometryUtils.js",
+      "bytes": 37641,
+      "sha256": "236155b53956af0c778b4e72af1097f77c5d7c0adb1c8cb205491f48fcc8d5f4"
+    },
+    {
+      "path": "vendor/three-addons/utils/SkeletonUtils.js",
+      "bytes": 11555,
+      "sha256": "b9ce558a98772a46dc67816d27e629a9810e41d1fd968eb96bdbfc8dbfb959f2"
+    },
+    {
+      "path": "vendor/three-LICENSE.txt",
+      "bytes": 1081,
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc"
     },
     {
       "path": ".nojekyll",

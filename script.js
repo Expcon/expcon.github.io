@@ -51,8 +51,21 @@
   button.textContent=reading?'启用动态':'阅读模式';
   controller?.setReading(reading);
  });
- if(document.documentElement.dataset?.public==='true'){
-  button.hidden=true;status.hidden=true;return;
+ // Cinematic stage enhancement. The same orchestration, timeline, navigation and disclosure
+ // logic run locally and on the public build; both load the published CR5AF geometry through
+ // cr5af-official.js, which is the only model source.
+ if(!window.gsap || !window.ScrollTrigger) {
+  status.textContent='当前为静态阅读模式：动画资源未加载，全部项目内容仍可阅读。';button.hidden=true;return;
  }
-
+ import('./robot-stage.js').then(async ({startStage})=>{
+  controller=await startStage();
+  controller.setReading(button.getAttribute('aria-pressed')==='true');
+  // Enhancement changes document geometry; resolve the real destination again.
+  if(destination)navigate(destination);else if(restoreOnEnhance&&location.hash)restoreHash();
+ }).catch(error=>{
+  document.body.classList.remove('enhanced','desktop-stage');
+  status.textContent='当前为静态阅读模式：3D 舞台不可用，全部项目内容仍可阅读。';
+  button.hidden=true;
+  console.info('3D enhancement unavailable:',error.message);
+ });
 })();
