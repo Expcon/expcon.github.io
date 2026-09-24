@@ -53,6 +53,13 @@
  if(!window.gsap || !window.ScrollTrigger) {
   status.textContent='当前为静态阅读模式：动画资源未加载，全部项目内容仍可阅读。';button.hidden=true;return;
  }
+ /* MOBILE_LITE_BEGIN */
+ // Keep navigation/HTML available; don't parse the 3D module graph before a phone paint.
+ if(matchMedia('(max-width: 900px)').matches&&!preference.matches&&params.get('test')!=='reduced-motion'){
+  requestAnimationFrame(()=>requestAnimationFrame(loadStage));
+ }else loadStage();
+ function loadStage(){
+ /* MOBILE_LITE_END */
  import('./robot-stage.js').then(async ({startStage})=>{
   controller=await startStage();
   controller.setReading(button.getAttribute('aria-pressed')==='true');
@@ -64,4 +71,7 @@
   button.hidden=true;
   console.info('3D enhancement unavailable:',error.message);
  });
+ /* MOBILE_LITE_BEGIN */
+ }
+ /* MOBILE_LITE_END */
 })();

@@ -21,20 +21,37 @@ export async function startStage(){
  const state={...KEYFRAMES[0]},scene=new THREE.Scene(),target=new THREE.Vector3(),point=new THREE.Vector3();
  const camera=new THREE.PerspectiveCamera(34,innerWidth/innerHeight,.02,30);
  const started=performance.now();
+ /* MOBILE_LITE_BEGIN */
+ const mobileBoot=phone.matches&&!preference.matches&&params.get('test')!=='reduced-motion';
+ const startup=mobileBoot?{stageStart:started}:null;
+ const yieldFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+ /* MOBILE_LITE_END */
  if(params.get('test')==='webgl-fail')throw Error('Test: WebGL initialization unavailable');
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
  renderer.setClearColor(0,0);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.86;
  const gl=renderer.getContext(),gpuTimer=params.has('qa')?gl.getExtension('EXT_disjoint_timer_query_webgl2'):null;
+ /* MOBILE_LITE_BEGIN */
+ if(startup){startup.webglMs=performance.now()-started;await yieldFrame();startup.environmentStart=performance.now();}
+ /* MOBILE_LITE_END */
  const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();
  const environment=pmrem.fromScene(room,.04).texture;scene.environment=environment;room.dispose();pmrem.dispose();
+ /* MOBILE_LITE_BEGIN */
+ if(startup)startup.environmentMs=performance.now()-startup.environmentStart;
+ /* MOBILE_LITE_END */
  const hemisphere=new THREE.HemisphereLight(0xffffff,0x7c826b);scene.add(hemisphere);
  const light=new THREE.DirectionalLight(0xfff8ed);scene.add(light);
  const rim=new THREE.DirectionalLight(0xe5ebf0);scene.add(rim);
  const draco=new DRACOLoader().setDecoderPath('./vendor/draco/').setWorkerLimit(2);
  const loader=new GLTFLoader().setDRACOLoader(draco);
+ /* MOBILE_LITE_BEGIN */
+ if(startup){draco.preload();startup.modelRequest=performance.now();}
+ /* MOBILE_LITE_END */
  let model;
  try{model=await loader.loadAsync(params.get('test')==='model-fail'?'./assets/missing.glb':'./assets/cr5af-authorized.glb');}
  catch(error){draco.dispose();environment.dispose();renderer.dispose();throw error;}
+ /* MOBILE_LITE_BEGIN */
+ if(startup){startup.modelReady=performance.now();startup.modelPipelineMs=startup.modelReady-startup.modelRequest;}
+ /* MOBILE_LITE_END */
  draco.dispose();
  const robot=model.scene,joints=Array.from({length:6},(_,i)=>robot.getObjectByName('J'+(i+1)));
  if(joints.some(j=>!j)){environment.dispose();renderer.dispose();throw Error('Original J1–J6 hierarchy unavailable');}
@@ -269,6 +286,12 @@ export async function startStage(){
   }catch(error){stopBenchmark();throw error;}
   if(disposed)return;
   if(!firstFrameMs){firstFrameMs=performance.now()-started;metrics();}
+  /* MOBILE_LITE_BEGIN */
+  if(startup&&!startup.revealQueued){
+   startup.revealQueued=true;
+   requestAnimationFrame(()=>{if(disposed)return;renderer.domElement.classList.add('mobile-ready');startup.revealAt=performance.now();metrics();});
+  }
+  /* MOBILE_LITE_END */
   if(benchmark){
    if(benchmark.last)benchmark.frames.push(time-benchmark.last);
    benchmark.last=time;benchmark.cpu.push(performance.now()-before);
@@ -287,6 +310,9 @@ export async function startStage(){
  }
  function metrics(extra={}){
   const value={loadMs:+loadMs.toFixed(1),firstFrameMs:+firstFrameMs.toFixed(1),modelBytes:3564832,triangles:renderer.info.render.triangles,drawCalls:renderer.info.render.calls,viewport:[innerWidth,innerHeight],dpr:renderer.getPixelRatio(),rendering:{variant:polished?'I':'G-lighting-control',fov:camera.fov,exposure:renderer.toneMappingExposure,environmentIntensity:scene.environmentIntensity,contact:polished?'illustrative base contact':'none',materials:[...materials].map(m=>({name:m.name,roughness:m.roughness,metalness:m.metalness,color:m.color?.getHexString()}))},scrollDistance:trigger?trigger.end-trigger.start:0,renderCount,fpsSample,...extra};
+  /* MOBILE_LITE_BEGIN */
+  if(startup)value.mobileStartup=startup;
+  /* MOBILE_LITE_END */
   $('metrics').textContent=JSON.stringify(value,null,2);
  }
  function resize(){
@@ -370,10 +396,20 @@ export async function startStage(){
   benchmark={start:performance.now(),last:0,frames:[],cpu:[],gpu:[],pending:[],disjoint:false,paired:params.has('qa')&&params.get('compare')==='1',variants:{G:{cpu:[],gpu:[]},I:{cpu:[],gpu:[]}},viewport:[innerWidth,innerHeight]};$('benchmark').disabled=true;schedule();
  });
  // Only enable the enhanced layout after a real model has rendered successfully.
+ /* MOBILE_LITE_BEGIN */
+ if(startup){
+  await yieldFrame();
+  const compileStart=performance.now();
+  await renderer.compileAsync(scene,camera);
+  startup.compileWallMs=performance.now()-compileStart;
+  await yieldFrame();
+  renderer.domElement.classList.add('mobile-enter');
+ }
+ /* MOBILE_LITE_END */
  renderer.setSize(innerWidth,innerHeight);robot.scale.setScalar(.001);camera.position.set(1.65,1.12,2.02);camera.lookAt(0,.5,0);renderer.render(scene,camera);
  $('canvas-host').appendChild(renderer.domElement);document.body.classList.add('enhanced');configure();
  return{
   scrollPosition(id){/* MOBILE_LITE_BEGIN */if(mobile)return mobile.scrollPosition(id);/* MOBILE_LITE_END */return !disposed&&mode&&trigger&&Object.hasOwn(CHAPTER_PROGRESS,id)?trigger.start+CHAPTER_PROGRESS[id]*(trigger.end-trigger.start):null;},
-  setReading(value){const id=active;reading=value;configure();if(value)requestAnimationFrame(()=>$(id).scrollIntoView({block:'start',behavior:'instant'}));}
+  setReading(value){/* MOBILE_LITE_BEGIN */if(mobileBoot&&value===reading)return;/* MOBILE_LITE_END */const id=active;reading=value;configure();if(value)requestAnimationFrame(()=>$(id).scrollIntoView({block:'start',behavior:'instant'}));}
  };
 }

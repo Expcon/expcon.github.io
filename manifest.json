@@ -17,13 +17,13 @@
     },
     {
       "path": "styles.css",
-      "bytes": 18801,
-      "sha256": "6be05f93698ad9f577397161f57f4740c62dfdc72bf4517ed80b4a6990ac1768"
+      "bytes": 19020,
+      "sha256": "7998eb30c92625fe8070e9b4d3438556c29d360af0244c44d128e846c3a48527"
     },
     {
       "path": "script.js",
-      "bytes": 4027,
-      "sha256": "b3e78b5d088342829af4e8f6263366b2e4d3686b375c50f13878babdb5cdf55a"
+      "bytes": 4429,
+      "sha256": "205b8435bf1bc0cb872ce541f4ccd4c6b73cef21bf54fbf6333343e38f34eb91"
     },
     {
       "path": "feedback.js",
@@ -47,8 +47,8 @@
     },
     {
       "path": "robot-stage.js",
-      "bytes": 27301,
-      "sha256": "18b351439f1bdd45e48350f1cf98b666ee1d6557be967881b8a706cb19e656cc"
+      "bytes": 28893,
+      "sha256": "f2131a7c97084ba5539b0303ae82d4f87fa5ca50045938267a63bec4e0e533cf"
     },
     {
       "path": "assets/cr5af-authorized.glb",

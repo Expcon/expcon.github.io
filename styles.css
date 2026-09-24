@@ -144,4 +144,8 @@ h2{font-size:clamp(35px,4.1vw,66px);font-weight:500;line-height:1.05;letter-spac
  .mobile-stage #shot-type[data-shot="perception"] span,.mobile-stage #shot-type[data-shot="execution"] span{font-size:9vw}
  .mobile-stage #shot-type[data-shot="science"] span{font-size:8vw}
 }
+@media(max-width:900px) and (prefers-reduced-motion:no-preference){
+ .mobile-stage #canvas-host canvas.mobile-enter{opacity:0;transition:opacity .18s linear}
+ .mobile-stage #canvas-host canvas.mobile-ready{opacity:1}
+}
 /* MOBILE_LITE_END */
