@@ -29,6 +29,28 @@ export function algorithmSceneAt(value){
  return {mode,progress,opacity:MAX_OPACITY*Math.min(fadeIn,fadeOut)};
 }
 
+// SVG pathLength reveals by arc length, not by Bézier parameter. Sample the
+// existing projected controls, then trim the polyline to the same visible length.
+// This is presentation geometry only; computed algorithm traces are untouched.
+export function visibleCurvePoints(controls,progress){
+ if(!Array.isArray(controls)||controls.length<2||controls.length>4||!controls.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)))return [];
+ const amount=clamp(Number.isFinite(progress)?progress:0);if(!amount)return [];
+ const points=Array.from({length:65},(_,i)=>{
+  let level=controls.map(p=>[...p]),t=i/64;
+  while(level.length>1)level=level.slice(1).map((p,k)=>p.map((n,j)=>level[k][j]*(1-t)+n*t));
+  return level[0];
+ });
+ if(amount===1)return points;
+ const lengths=points.slice(1).map((p,i)=>Math.hypot(p[0]-points[i][0],p[1]-points[i][1]));
+ let remaining=lengths.reduce((sum,n)=>sum+n,0)*amount,result=[points[0]];
+ for(let i=0;i<lengths.length;i++){
+  if(remaining>=lengths[i]){result.push(points[i+1]);remaining-=lengths[i];continue}
+  const t=lengths[i]?remaining/lengths[i]:0;
+  result.push(points[i].map((n,j)=>n+(points[i+1][j]-n)*t));break;
+ }
+ return result;
+}
+
 export function createAlgorithmBackdrop({host,requestRender}){
  const doc=host?.ownerDocument||globalThis.document;
  const annotation=host?.nextElementSibling?.classList?.contains('algorithm-disclosure')?host.nextElementSibling:null;
@@ -38,6 +60,8 @@ export function createAlgorithmBackdrop({host,requestRender}){
  let width=0,height=0,lastFrame='',lastOpacity=-1,wasHidden=!!doc?.hidden;
  let displayed=null,target=null,playTime=0,phase='play',phaseTime=0,phaseStart=1,alpha=1,loopReset=false;
  let frameId=null,clockVersion=0,lastTick=null;
+ let foreground=null,foregroundKey='',foregroundVersion=0;
+ let studyCanvas=null,studyContext=null,lastComposite='';
 
  // This is the only autoplay clock. It paints Canvas2D directly and never
  // asks the owner to rerender its stationary robot or advance its timeline.
@@ -138,6 +162,8 @@ export function createAlgorithmBackdrop({host,requestRender}){
  }
  function releaseCanvas(){
   setOpacity(0);canvas?.remove();canvas=null;ctx=null;renderer=null;lastFrame='';lastOpacity=-1;
+  if(studyCanvas){studyCanvas.width=1;studyCanvas.height=1}
+  studyCanvas=null;studyContext=null;lastComposite='';
  }
  function fail(){
   failed=true;stopWatching();setOpacity(0);releaseCanvas();
@@ -152,16 +178,25 @@ export function createAlgorithmBackdrop({host,requestRender}){
    ctx=canvas.getContext('2d');
    if(!ctx){fail();return false}
    canvas.width=width;canvas.height=height;setOpacity(0);
-   renderer=new visual.CanvasRenderer(ctx);
-   const circle=renderer.circle.bind(renderer);
-   // The approved renderer's optional dot grid is decorative; landmarks,
-   // matrix blocks and every other geometry command remain unchanged.
-   renderer.circle=(x,y,r,color,alpha=1,stroke=null)=>{
-    if(r<1&&alpha<=.1)return;
-    circle(x,y,r,color,alpha,stroke);
-   };
+   renderer=makeRenderer(ctx);
    host.appendChild(canvas);return true;
   }catch{fail();return false}
+ }
+ function makeRenderer(context){
+  const renderer=new globalThis.AlgorithmVisual.CanvasRenderer(context),circle=renderer.circle.bind(renderer);
+  // Only the approved renderer's optional decorative dot grid is omitted.
+  renderer.circle=(x,y,r,color,alpha=1,stroke=null)=>{if(r<1&&alpha<=.1)return;circle(x,y,r,color,alpha,stroke)};
+  return renderer;
+ }
+ function prepareStudyCache(){
+  if(studyCanvas||(!foreground?.paths.length&&!foreground?.tip))return;
+  // A detached Canvas2D raster keeps the costly computed study at its original
+  // 30 Hz budget. Only copying that raster and cutting foreground corridors
+  // follows scroll; the DOM still contains exactly one backdrop canvas.
+  studyCanvas=doc.createElement('canvas');studyCanvas.width=width;studyCanvas.height=height;
+  studyContext=studyCanvas.getContext('2d');
+  if(!studyContext)throw Error('Study cache context unavailable');
+  renderer=makeRenderer(studyContext);lastFrame='';lastComposite='';
  }
  function setEnabled(value){
   if(disposed)return;
@@ -191,24 +226,63 @@ export function createAlgorithmBackdrop({host,requestRender}){
   const scale=Math.min(dpr,WIDTH/cssWidth,MAX_HEIGHT/cssHeight);
   const nextWidth=Math.max(1,Math.floor(cssWidth*scale)),nextHeight=Math.max(1,Math.floor(cssHeight*scale));
   if(nextWidth===width&&nextHeight===height)return;
-  width=nextWidth;height=nextHeight;lastFrame='';
+  width=nextWidth;height=nextHeight;lastFrame='';lastComposite='';
   if(canvas){canvas.width=width;canvas.height=height}
+  if(studyCanvas){studyCanvas.width=width;studyCanvas.height=height}
+ }
+ // Coordinates come from the robot's measured viewport and actual projection.
+ // No DOM measurements, second animation clock, path relocation, or new study data.
+ function setForeground(value){
+  if(disposed||!value||![value.width,value.height].every(n=>Number.isFinite(n)&&n>0))return;
+  const valid=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
+  const paths=(value.paths||[]).filter(path=>Array.isArray(path.points)&&path.points.length>1&&path.points.every(valid)&&Number.isFinite(path.opacity)&&path.opacity>0)
+   .map(path=>({points:path.points.map(p=>[...p]),opacity:clamp(path.opacity*5)}));
+  const tip=valid(value.tip?.point)&&Number.isFinite(value.tip?.opacity)&&value.tip.opacity>0?{point:[...value.tip.point],opacity:clamp(value.tip.opacity*5)}:null;
+  const next={width:value.width,height:value.height,paths,tip};
+  const key=JSON.stringify(next,(_,n)=>typeof n==='number'?Math.round(n*100)/100:n);
+  if(key===foregroundKey)return;
+  foreground=next;foregroundKey=key;foregroundVersion++;
+ }
+ function maskForeground(){
+  if(!foreground||(!foreground.paths.length&&!foreground.tip))return;
+  ctx.save();
+  ctx.setTransform(width/foreground.width,0,0,height/foreground.height,0,0);
+  ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='#000';ctx.fillStyle='#000';ctx.lineCap='round';ctx.lineJoin='round';
+  // Four nested bands keep a fully clear center and a small feathered edge.
+  // The large study remains visible everywhere beyond these narrow corridors.
+  for(const path of foreground.paths){
+   for(const [size,opacity] of [[56,.10],[42,.22],[28,.55],[18,1]]){
+    ctx.globalAlpha=opacity*path.opacity;ctx.lineWidth=size;ctx.beginPath();
+    path.points.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.stroke();
+   }
+  }
+  if(foreground.tip)for(const [radius,opacity] of [[52,.10],[44,.22],[36,.55],[28,1]]){
+   ctx.globalAlpha=opacity*foreground.tip.opacity;ctx.beginPath();ctx.arc(...foreground.tip.point,radius,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
  }
  function paint(){
   if(!canDraw()||!data||!width||!height||!displayed)return;
   if(!prepareCanvas())return;
   const progress=Math.round(clamp(playTime/PLAY_MS)*STEPS)/STEPS;
   const key=`${displayed}:${Math.round(progress*STEPS)}:${width}:${height}`;
-  if(key!==lastFrame){
-   try{
-    ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
-    ctx.fillStyle='#121716';ctx.fillRect(0,0,width,height);
+  try{
+   prepareStudyCache();
+   if(key!==lastFrame){
+    const context=studyContext||ctx;
+    context.setTransform(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='source-over';
+    context.fillStyle='#121716';context.fillRect(0,0,width,height);
     const scale=Math.min(width/WIDTH,height/HEIGHT);
-    ctx.setTransform(scale,0,0,scale,(width-WIDTH*scale)/2,(height-HEIGHT*scale)/2);
+    context.setTransform(scale,0,0,scale,(width-WIDTH*scale)/2,(height-HEIGHT*scale)/2);
     globalThis.AlgorithmVisual.renderFrame(renderer,data,displayed,progress,{background:true});
     lastFrame=key;if(host.dataset.study!==displayed)host.dataset.study=displayed;
-   }catch{fail();return}
-  }
+   }
+   const compositeKey=`${key}:${foregroundVersion}`;
+   if(studyCanvas&&compositeKey!==lastComposite){
+    ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+    ctx.clearRect(0,0,width,height);ctx.drawImage(studyCanvas,0,0);maskForeground();lastComposite=compositeKey;
+   }
+  }catch{fail();return}
   setOpacity(MAX_OPACITY*alpha);
  }
  function draw(p){
@@ -224,5 +298,5 @@ export function createAlgorithmBackdrop({host,requestRender}){
   disposed=true;enabled=false;stopWatching();
   releaseCanvas();data=null;
  }
- return {setEnabled,resize,draw,dispose};
+ return {setEnabled,resize,setForeground,draw,dispose};
 }

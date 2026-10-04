@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.min.js';
-import {createAlgorithmBackdrop} from './algorithm-backdrop.js';
+import {createAlgorithmBackdrop,visibleCurvePoints} from './algorithm-backdrop.js';
 import {GLTFLoader} from './vendor/three-addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from './vendor/three-addons/loaders/DRACOLoader.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
@@ -124,7 +124,7 @@ export async function startStage(){
  const savedStyles=new Map(chapters.map(el=>[el,el.getAttribute('style')]));
  let active='identity',firstFrameMs=0;
  const stageSize={width:innerWidth,height:innerHeight};
- let fpsSample=null;
+ let fpsSample=null,foregroundPaths=[];
  gsap.registerPlugin(ScrollTrigger);
 
  function setText(el,value){if(el.textContent!==value)el.textContent=value;}
@@ -146,7 +146,6 @@ export async function startStage(){
   if(mode){
    const p=state.p;
    const copy=copyAt(p),contract=ramp(p,0,.18),quiet=editorialAt(p);
-   backdrop.draw(p);
    active=chapters[copy.index].id;
    const type=$('shot-type'),word=type.firstElementChild;
    type.dataset.shot=active;$('visual').dataset.chapter=active;type.style.visibility=copy.index?'visible':'hidden';
@@ -175,6 +174,7 @@ export async function startStage(){
     }
    });
    updateWorld(p);
+   backdrop.draw(p);
    setText($('phase'),['ADRIAN / AI FOR SCIENCE','01 / AGENT','02 / PERCEPTION','03 / EXECUTION','04 / DATA FEEDBACK'][copy.index]);
    setText($('progress'),String(Math.round(p*100)).padStart(3,'0')+'%');$('progress-fill').style.width=p*100+'%';
   }
@@ -184,6 +184,7 @@ export async function startStage(){
   // Projection uses the same measured dimensions as the renderer. ResizeObserver
   // refreshes them; scrolling must not force a layout read after the copy writes.
   const w=stageSize.width,h=stageSize.height;
+  foregroundPaths=[];
   const reveal=ramp(p,.28,.43),resolve=ramp(p,.79,.96),inspection=ramp(p,.56,.63)*(1-ramp(p,.77,.86)),quiet=editorialAt(p);
   // All anchors share the robot's base transform and the actual camera projection.
   const project=v=>{point.set(...v).applyMatrix4(spatial.matrixWorld).project(camera);return[(point.x*.5+.5)*w,(-point.y*.5+.5)*h];};
@@ -211,11 +212,11 @@ export async function startStage(){
   // Use final visibility before building SVG paths. Hidden close-up overlays
   // resume from this exact progress on reveal, including reverse scrolling.
   const svgOpacity=1-ramp(p,.76,.82),connection=ramp(p,.40,.65),execution=ramp(p,.79,.92),feedback=ramp(p,.87,1);
-  drawLink('planning-trace',()=> 'M '+goal+' Q '+plan+' '+tip,ramp(p,.12,.30),intent*(1-reveal)*.65*(1-quiet));
-  drawLink('agent-perception',()=> 'M '+goal+' Q '+returnPoint+' '+senseEnd,reveal,reveal*resolve*.65*svgOpacity);
-  drawLink('perception-execution',()=> 'M '+regionPoint+' Q '+[regionPoint[0]+40,tip[1]+60]+' '+tip,connection,(polished||(benchmark?.paired&&p<=.76))?0:(connection>0?svgOpacity:0));
-  drawLink('execution-feedback',()=> 'M '+base+' C '+[base[0],output[1]]+' '+[output[0]+80,output[1]]+' '+output,execution,execution>0?svgOpacity:0);
-  drawLink('feedback-agent',()=> 'M '+output+' C '+[returnPoint[0],output[1]]+' '+returnPoint+' '+goal,feedback,feedback>0?svgOpacity:0);
+  drawLink('planning-trace',()=> 'M '+goal+' Q '+plan+' '+tip,ramp(p,.12,.30),intent*(1-reveal)*.65*(1-quiet),()=>[goal,plan,tip]);
+  drawLink('agent-perception',()=> 'M '+goal+' Q '+returnPoint+' '+senseEnd,reveal,reveal*resolve*.65*svgOpacity,()=>[goal,returnPoint,senseEnd]);
+  drawLink('perception-execution',()=> 'M '+regionPoint+' Q '+[regionPoint[0]+40,tip[1]+60]+' '+tip,connection,(polished||(benchmark?.paired&&p<=.76))?0:(connection>0?svgOpacity:0),()=>[regionPoint,[regionPoint[0]+40,tip[1]+60],tip]);
+  drawLink('execution-feedback',()=> 'M '+base+' C '+[base[0],output[1]]+' '+[output[0]+80,output[1]]+' '+output,execution,execution>0?svgOpacity:0,()=>[base,[base[0],output[1]],[output[0]+80,output[1]],output]);
+  drawLink('feedback-agent',()=> 'M '+output+' C '+[returnPoint[0],output[1]]+' '+returnPoint+' '+goal,feedback,feedback>0?svgOpacity:0,()=>[output,[returnPoint[0],output[1]],returnPoint,goal]);
   corners.forEach((c,i)=>{volume.geometry.attributes.position.setXYZ(i*2,...senseLocal);volume.geometry.attributes.position.setXYZ(i*2+1,...c.map((v,k)=>senseLocal[k]+(v-senseLocal[k])*reveal));});
   viewpoint.position.y=senseLocal[1]-sensor[1];
   volume.geometry.attributes.position.needsUpdate=true;volume.material.opacity=.38*(1-.72*resolve)*(1-.75*inspection);
@@ -243,13 +244,23 @@ export async function startStage(){
   }
   // A quiet editorial beat inside the same moving world; disclosures remain visible.
   for(const line of [volume,regionLine,frame,viewpoint])line.material.opacity*=1-quiet;
+  // Read the visible 3D buffer rather than approximating its controls in 2D.
+  // It includes reveal progress, the original base transform and the same camera.
+  for(const line of loopPaths){
+   if(!line.visible||line.material.opacity<=0)continue;
+   const position=line.geometry.attributes.position,points=[];
+   for(let i=0;i<position.count;i++)points.push(project([position.getX(i),position.getY(i),position.getZ(i)]));
+   foregroundPaths.push({points,opacity:line.material.opacity});
+  }
+  backdrop.setForeground({width:w,height:h,paths:foregroundPaths,tip:{point:tip,opacity:ramp(p,.10,.18)}});
  }
- function drawLink(id,path,progress,opacity){
+ function drawLink(id,path,progress,opacity,controls){
   const el=$(id);el.style.opacity=opacity;
   if(opacity<=0)return;
   el.setAttribute('d',path());el.setAttribute('pathLength','1');
   el.style.strokeDasharray='1';el.style.strokeDashoffset=1-progress;
   el.setAttribute('marker-end',progress>.99?'url(#flow-arrow)':'');
+  if(controls&&progress>0)foregroundPaths.push({points:visibleCurvePoints(controls(),progress),opacity});
  }
  function stopBenchmark(){
   benchmark?.pending.forEach(({query})=>gl.deleteQuery(query));

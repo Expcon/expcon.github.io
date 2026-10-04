@@ -38,7 +38,7 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
  const say=(zh,en,locale=lang())=>locale==='zh'?zh:en;
  const setStatus=text=>{if(status)status.textContent=text};
  const copy={
-  pending:['正在根据公开资料回答…','Answering from the public portfolio…'],
+  pending:['正在回答…','Preparing an answer…'],
   cancelled:['已取消，问题已保留。取消不保证停止计费；重试会计作新的请求。','Cancelled. Your question is kept. Cancellation may not stop billing; retrying counts as a new request.'],
   TIMEOUT:['回答超过 20 秒，已停止等待。问题已保留；重试会计作新的请求。','The answer timed out after 20 seconds. Your question is kept; retrying counts as a new request.'],
   RATE_LIMITED:['问答额度已达限制，请稍后再试或查看本地资料。','The chat limit has been reached. Try later or view the local notes.'],
@@ -61,8 +61,8 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
   if(answer.choices.length){const choices=make('div','','twin-choices');for(const id of answer.choices){const record=KNOWLEDGE.find(item=>item.id===id);if(!record)continue;const button=make('button',record.title[turn.language]);button.type='button';button.addEventListener('click',()=>selectTopic(id));choices.append(button)}node.append(choices)}
  }
  function welcome(){return bubble('assistant',say(
-  '我是 Adrian Chen／陈谦公开主页的 AI 导览助手，可以根据已公开资料介绍他的项目和研究方向。想从哪个问题开始？',
-  'I am the AI guide to Adrian Chen／陈谦’s public portfolio. I can introduce his projects and research directions based on published information. What would you like to explore?'),lang())}
+  currentMode==='live'?'你好，我是陈谦主页的 AI 导览助手。项目、技术或日常话题，都可以聊聊。关于陈谦的经历，我会依据公开资料回答。想从哪里开始？':'我是 Adrian Chen／陈谦公开主页的 AI 导览助手，可以根据已公开资料介绍他的项目和研究方向。想从哪个问题开始？',
+  currentMode==='live'?'Hi, I’m the AI guide to Adrian Chen’s portfolio. Ask about projects, technology, or everyday topics. Facts about Adrian come from public notes. Where shall we start?':'I am the AI guide to Adrian Chen／陈谦’s public portfolio. I can introduce his projects and research directions based on published information. What would you like to explore?'),lang())}
  function controls(){
   const busy=!!active;input.disabled=busy;if(send)send.disabled=busy;if(consent)consent.disabled=busy;
   for(const button of topics)button.disabled=busy;
@@ -73,10 +73,11 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
  }
  function updateLabels(){
   const live=currentMode==='live';input.maxLength=live?1000:560;
-  if(modeLabel)modeLabel.textContent=live?say('AI 根据公开主页生成，可能有误','AI answers from the public portfolio and may be wrong'):say('本地资料预览','Local notes preview');
+  if(modeLabel)modeLabel.textContent=live?say('AI 通用问答 · 个人事实依据公开资料 · 可能有误','General AI chat · Personal facts use public notes · May be wrong'):say('本地资料预览','Local notes preview');
   if(consentPanel)consentPanel.hidden=!live;
-  if(consentCopy)consentCopy.textContent=say('这是 AI 导览助手。问题、最近两轮完整对话和限定的公开主页资料会经 Supabase 发给阿里云百炼。请勿输入隐私或未公开研究。服务商可能保留访问元数据，不保证零留存。','This is an AI guide. Your question, the last two complete turns and the limited public portfolio notes are sent through Supabase to Alibaba Cloud Model Studio. Do not enter private information or unpublished research. Providers may retain access metadata; zero retention is not guaranteed.');
-  if(consentLabel)consentLabel.textContent=say('我已了解并同意发送以上内容（仅本页有效）','I understand and agree to send this information (this page only)');
+  input.placeholder=live?say('聊聊项目、技术，或今天的一个想法…','Ask about a project, technology, or an idea…'):say('询问陈谦的项目、研究方向或经历…','Ask about Adrian’s projects or research…');
+  if(consentCopy)consentCopy.textContent=say('问题、最近两轮完整对话及限定的公开主页资料会经 Supabase 发给阿里云百炼。勿输入隐私或未公开研究；服务商可能保留访问元数据，不保证零留存。','Your question, last two complete turns and limited public portfolio notes go through Supabase to Alibaba Cloud Model Studio. Avoid private or unpublished information. Providers may retain access metadata; zero retention is not guaranteed.');
+  if(consentLabel)consentLabel.textContent=say('我同意发送以上内容（仅本页有效）','I understand and agree to send this information (this page only)');
   if(cancel)cancel.textContent=say('取消回答','Cancel answer');
   if(help)help.textContent=live?say('最多 500 字符 · 展示最近 12 轮 · 发送最近 2 轮','Up to 500 characters · 12 visible turns · 2 turns sent'):say('公开资料问答 · 最多 280 字符 · 保留最近 12 轮','Local public notes · Up to 280 characters · 12 visible turns');
   if(privacy)privacy.textContent=live?say(
@@ -86,7 +87,7 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
   for(const button of topics){const item=KNOWLEDGE.find(x=>x.id===button.dataset.twinTopic);if(item)button.textContent=item.question[lang()]}
   controls();
  }
- function sentHistory(){return history.filter(turn=>turn.answer&&['answer','unknown'].includes(turn.answer.kind)).slice(-2).flatMap(turn=>[
+ function sentHistory(){return history.filter(turn=>turn.answer&&['answer','general','unknown'].includes(turn.answer.kind)).slice(-2).flatMap(turn=>[
   {role:'user',content:[...turn.question].slice(0,1200).join('')},{role:'assistant',content:[...turn.answer.text].slice(0,1200).join('')}
  ])}
  function newId(){return globalThis.crypto.randomUUID()}
@@ -108,7 +109,7 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
   if(currentMode==='live'&&!(consentGranted&&consent?.checked)){setStatus(message('CONSENT_REQUIRED'));consent?.focus();return;}
   let request;try{request={requestId:newId(),question:q,language:locale,history:sentHistory()}}catch{setStatus(message('UNAVAILABLE',locale));return;}
   const controller=new AbortController(),turn={question:q,language:locale,answer:null,user:bubble('user',q,locale),assistant:bubble('assistant',message('pending',locale),locale)};
-  turn.assistant.dataset.state='pending';history.push(turn);output.append(turn.user,turn.assistant);trimHistory();output.scrollTop=output.scrollHeight;failed=null;
+  turn.assistant.dataset.state='pending';output.dataset.conversation='active';history.push(turn);output.append(turn.user,turn.assistant);trimHistory();output.scrollTop=output.scrollHeight;failed=null;
   const operation={turn,controller,generation:++generation,timer:null};active=operation;controls();setStatus(message('pending',locale));
   operation.timer=setTimeout(()=>{if(active===operation&&generation===operation.generation)failCurrent('TIMEOUT')},20000);
   // Await also handles local sync notes; rejected/late promises never escape.
@@ -129,13 +130,13 @@ export function mountTwin(root,respond=localAdapter,{mode='offline'}={}){
  cancel?.addEventListener('click',()=>failCurrent('cancelled'));
  retry?.addEventListener('click',()=>{if(!active&&failed)submit(failed.question)});
  clear.addEventListener('click',()=>{
-  generation++;if(active){clearTimeout(active.timer);active.controller.abort();active=null}history.length=0;failed=null;input.value='';output.replaceChildren(welcome());setStatus('');controls();input.focus();
+  generation++;if(active){clearTimeout(active.timer);active.controller.abort();active=null}history.length=0;failed=null;input.value='';output.dataset.conversation='welcome';output.replaceChildren(welcome());setStatus('');controls();input.focus();
  });
  local?.addEventListener('click',()=>{
   if(active)failCurrent('cancelled');currentMode='offline';respond=localAdapter;failed=null;setStatus('');updateLabels();input.focus();
  });
  for(const button of topics)button.addEventListener('click',()=>selectTopic(button.dataset.twinTopic));
- form.hidden=false;suggestions.hidden=false;output.replaceChildren(welcome());updateLabels();
+ form.hidden=false;suggestions.hidden=false;output.dataset.conversation='welcome';output.replaceChildren(welcome());updateLabels();
 }
 if(typeof document!=='undefined'){
  const live=TWIN_CONFIG.mode==='live'&&!!TWIN_CONFIG.endpoint;

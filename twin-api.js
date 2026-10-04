@@ -1,6 +1,6 @@
 /** @typedef {{requestId:string,question:string,language:'zh'|'en',history:Array<{role:'user'|'assistant',content:string}>}} ChatRequest */
 /** @typedef {{id:string,label:string,href:string}} Source */
-/** @typedef {{kind:'answer'|'unknown',text:string,sources:Source[],choices:[]}} ChatAnswer */
+/** @typedef {{kind:'answer'|'general'|'unknown',text:string,sources:Source[],choices:[]}} ChatAnswer */
 
 // Deliberately separate from server modules: these are the only rendered live links.
 const SOURCES=Object.freeze(Object.fromEntries([
@@ -25,7 +25,7 @@ const aborted=()=>new DOMException('The request was cancelled.','AbortError');
  * @returns {ChatAnswer}
  */
 export function validateLiveAnswer(value){
- if(!exact(value,['kind','text','sources','choices'])||!['answer','unknown'].includes(value.kind)
+ if(!exact(value,['kind','text','sources','choices'])||!['answer','general','unknown'].includes(value.kind)
   ||!text(value.text,2000)||!dataArray(value.sources)||value.sources.length>8
   ||!dataArray(value.choices)||value.choices.length!==0
   ||(value.kind==='answer'?value.sources.length===0:value.sources.length!==0))throw failure('UNAVAILABLE');
