@@ -1,4 +1,5 @@
-// Phone-only display poses. The accepted desktop choreography is not sampled or changed.
+import {createStateInterpolator,copyAt} from './choreography.js';
+// Phone-only display waypoints; the shared sampler keeps their authored values exact.
 const clamp=v=>Math.max(0,Math.min(1,v));
 const ramp=(p,a,b)=>clamp((p-a)/(b-a));
 export const MOBILE_CHAPTERS={identity:0,agent:.24,perception:.48,execution:.67,science:.94};
@@ -10,11 +11,7 @@ export const MOBILE_KEYS=[
  {p:.69,x:.06,y:0,scale:.97,ry:.13,cx:1.37,cy:1.10,cz:2.55,tx:0,ty:.52,tz:0,...pose,j1:.06,j2:-.57,j3:1.14},
  {p:1,x:.19,y:0,scale:.72,ry:-.18,cx:1.55,cy:1.20,cz:3.0,tx:0,ty:.48,tz:0,...pose}
 ];
-export function mobileStateAt(value){
- const p=clamp(value),i=Math.max(1,MOBILE_KEYS.findIndex(k=>k.p>=p));
- const a=MOBILE_KEYS[i-1],b=MOBILE_KEYS[i],t=(p-a.p)/(b.p-a.p);
- return Object.fromEntries(Object.keys(a).map(k=>[k,a[k]+(b[k]-a[k])*t]));
-}
+export const mobileStateAt=createStateInterpolator(MOBILE_KEYS);
 
 export function createMobileLite({schedule,robot,joints,rest,axes,q,camera,target,scene,contact,spatial,volume,regionLine,frame,viewpoint,loopPaths,point}){
  const $=id=>document.getElementById(id),chapters=[...document.querySelectorAll('.chapter')];
@@ -26,8 +23,8 @@ export function createMobileLite({schedule,robot,joints,rest,axes,q,camera,targe
  addEventListener('scroll',schedule,{passive:true});
  function apply(auditProgress){
   const range=bounds(),p=auditProgress??clamp((scrollY-range.start)/range.distance),s=mobileStateAt(p),rect=$('visual').getBoundingClientRect(),w=rect.width,h=rect.height;
-  const index=p<.14?0:p<.36?1:p<.58?2:p<.79?3:4;
-  active=chapters[index].id;const offset=Math.max(0,Math.min(range.distance,scrollY-range.start));
+  const starts=[0,.14,.36,.58,.79],copy=copyAt(p,{starts,enterDuration:.03,exitDuration:.025,travel:12}),index=copy.index;
+  active=chapters[index].id;
   robot.position.set(s.x,s.y,0);robot.rotation.y=s.ry;robot.scale.setScalar(.001*s.scale);
   joints.forEach((j,i)=>j.quaternion.copy(rest[i]).multiply(q.setFromAxisAngle(axes[i],s['j'+(i+1)])));
   camera.position.set(s.cx,s.cy,s.cz);target.set(s.tx,s.ty,s.tz);
@@ -41,17 +38,18 @@ export function createMobileLite({schedule,robot,joints,rest,axes,q,camera,targe
   volume.material.opacity=.19*ramp(p,.35,.48);regionLine.material.opacity=.35*ramp(p,.35,.48);
   frame.material.opacity=.10;viewpoint.material.opacity=0;loopPaths.forEach(line=>{line.visible=false;});
   camera.lookAt(target);camera.updateMatrixWorld();scene.updateMatrixWorld(true);
-  const starts=[0,.14,.36,.58,.79],ends=[.14,.36,.58,.79,1.1];
   chapters.forEach((el,i)=>{
    const shown=i===index;
-   el.style.top=offset+'px';el.style.visibility=shown?'visible':'hidden';el.inert=!shown;el.setAttribute('aria-hidden',!shown);
+   el.style.visibility=shown?'visible':'hidden';el.inert=!shown;el.setAttribute('aria-hidden',!shown);
    // Short copy transitions; robot movement never pauses with the text.
-   el.style.opacity=shown?Math.min(i?ramp(p,starts[i],starts[i]+.03):1,1-ramp(p,ends[i]-.025,ends[i])):0;
+   el.style.opacity=shown?copy.opacity:0;
+   el.style.transform='translateY('+copy.y+'px)';
   });
   hero.style.transform='translateY('+(-12*ramp(p,0,.14))+'px) scale('+(1-.07*ramp(p,0,.14))+')';
-  type.dataset.shot=active;type.style.visibility=index?'visible':'hidden';
+  type.dataset.shot=active;$('visual').dataset.chapter=active;type.style.visibility=index?'visible':'hidden';
   type.firstElementChild.textContent=['','AGENT','PERCEPTION','EXECUTION','AI FOR SCIENCE'][index];
-  type.firstElementChild.style.transform='translateX('+(-10*(p-starts[index]))+'px)';
+  type.style.opacity=copy.opacity;
+  type.firstElementChild.style.transform='translateY('+copy.y+'px)';
   $('visual').dataset.mobileShot=active;
   // One restrained projected cue, attached to the original J6 and a conceptual workspace.
   joints[5].getWorldPosition(point).project(camera);
@@ -73,6 +71,6 @@ export function createMobileLite({schedule,robot,joints,rest,axes,q,camera,targe
   scrollPosition(id){if(!Object.hasOwn(MOBILE_CHAPTERS,id))return null;const range=bounds();return range.start+MOBILE_CHAPTERS[id]*range.distance;},
   dispose(){removeEventListener('scroll',schedule);hero.removeAttribute('style');
    for(const el of document.querySelectorAll('#visual [style]'))el.removeAttribute('style');
-   type.removeAttribute('data-shot');delete $('visual').dataset.mobileShot;spatial.visible=false;
+   type.removeAttribute('data-shot');delete $('visual').dataset.mobileShot;delete $('visual').dataset.chapter;spatial.visible=false;
   }};
 }

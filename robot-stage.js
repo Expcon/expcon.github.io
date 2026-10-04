@@ -1,8 +1,9 @@
 import * as THREE from './vendor/three.module.min.js';
+import {createAlgorithmBackdrop} from './algorithm-backdrop.js';
 import {GLTFLoader} from './vendor/three-addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from './vendor/three-addons/loaders/DRACOLoader.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
-import {KEYFRAMES,CHAPTER_PROGRESS,clamp,ramp,copyAt,curveFor,stateAt,editorialAt} from './choreography.js';
+import {KEYFRAMES,CHAPTER_PROGRESS,clamp,ramp,copyAt,stateAt,editorialAt} from './choreography.js';
 
 /* MOBILE_LITE_BEGIN */
 import {createMobileLite} from './mobile-lite.js';
@@ -16,7 +17,8 @@ export async function startStage(){
  let reading=false,disposed=false,mode=false,trigger,timeline,queued=false,benchmark=null,renderCount=0;
  /* MOBILE_LITE_BEGIN */
  let mobile=null;
- const phone=matchMedia('(max-width: 900px)');
+ // Short landscape windows keep readable normal flow and the same static 3D view.
+ const phone=matchMedia('(max-width: 900px) and (min-height: 560px)');
  /* MOBILE_LITE_END */
  const state={...KEYFRAMES[0]},scene=new THREE.Scene(),target=new THREE.Vector3(),point=new THREE.Vector3();
  const camera=new THREE.PerspectiveCamera(34,innerWidth/innerHeight,.02,30);
@@ -38,9 +40,9 @@ export async function startStage(){
  /* MOBILE_LITE_BEGIN */
  if(startup)startup.environmentMs=performance.now()-startup.environmentStart;
  /* MOBILE_LITE_END */
- const hemisphere=new THREE.HemisphereLight(0xffffff,0x7c826b);scene.add(hemisphere);
- const light=new THREE.DirectionalLight(0xfff8ed);scene.add(light);
- const rim=new THREE.DirectionalLight(0xe5ebf0);scene.add(rim);
+ const hemisphere=new THREE.HemisphereLight(0xffffff,0x99adc4);scene.add(hemisphere);
+ const light=new THREE.DirectionalLight(0xf6faff);scene.add(light);
+ const rim=new THREE.DirectionalLight(0xcbdfff);scene.add(rim);
  const draco=new DRACOLoader().setDecoderPath('./vendor/draco/').setWorkerLimit(2);
  const loader=new GLTFLoader().setDRACOLoader(draco);
  /* MOBILE_LITE_BEGIN */
@@ -65,16 +67,19 @@ export async function startStage(){
  // Illustrative contact only: anchored to the real base, not a computed arm shadow.
  const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
  const context=shadowCanvas.getContext('2d'),gradient=context.createRadialGradient(64,64,8,64,64,64);
- gradient.addColorStop(0,'rgba(37,43,38,.27)');gradient.addColorStop(.28,'rgba(37,43,38,.15)');gradient.addColorStop(1,'rgba(37,43,38,0)');
+ gradient.addColorStop(0,'rgba(21,43,77,.27)');gradient.addColorStop(.28,'rgba(21,43,77,.15)');gradient.addColorStop(1,'rgba(21,43,77,0)');
  context.fillStyle=gradient;context.fillRect(0,0,128,128);
  const contactTexture=new THREE.CanvasTexture(shadowCanvas);contactTexture.colorSpace=THREE.SRGBColorSpace;
  const contact=new THREE.Mesh(new THREE.PlaneGeometry(.52,.44),new THREE.MeshBasicMaterial({map:contactTexture,transparent:true,depthWrite:false,toneMapped:false}));
  contact.rotation.x=-Math.PI/2;scene.add(contact);
- function setRendering(h){
-  scene.environmentIntensity=h?.46:.6;scene.environmentRotation.y=h?.45:0;hemisphere.intensity=h?.20:.4;
-  light.intensity=h?2.1:1.8;light.position.set(h?-3:3,5,4);
-  rim.intensity=h?1:.55;rim.position.set(h?3:-3,2,h?-3:-2);
-  shells.forEach(m=>{m.roughness=h?.58:.6;});contact.visible=h;document.body.classList.toggle('render-depth',h);
+ function setRendering(h,graphite=h&&mode){
+  // Match the dark studio through illumination, retaining authored white/silver color.
+  renderer.toneMappingExposure=graphite?.78:.86;
+  scene.environmentIntensity=graphite?.26:h?.46:.6;scene.environmentRotation.y=h?.45:0;hemisphere.intensity=graphite?.16:h?.20:.4;
+  hemisphere.color.setHex(graphite?0xd6ded7:0xffffff);hemisphere.groundColor.setHex(graphite?0x2b3531:0x99adc4);
+  light.color.setHex(graphite?0xe5e9e5:0xf6faff);light.intensity=graphite?1.3:h?2.1:1.8;light.position.set(h?-3:3,5,4);
+  rim.color.setHex(graphite?0xa7beb2:0xcbdfff);rim.intensity=graphite?.45:h?1:.55;rim.position.set(h?3:-3,2,h?-3:-2);
+  shells.forEach(m=>{m.roughness=graphite?.70:h?.58:.6;});contact.visible=h;document.body.classList.toggle('render-depth',h);
   loopPaths[1].visible=state.p>.40&&(h||state.p>.76);
   loopPaths[1].material.opacity=.72*(h?1-.6*ramp(state.p,.76,.92):ramp(state.p,.76,.82));
  }
@@ -87,13 +92,13 @@ export async function startStage(){
   const line=new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color,transparent:true,opacity:.55,depthWrite:false}));
   spatial.add(line);return line;
  }
- const volume=segments(corners.map(c=>[sensor,c]),0x89937b);
- const regionLine=segments(corners.map((c,i)=>[c,corners[(i+1)%4]]),0xbc4d24);
+ const volume=segments(corners.map(c=>[sensor,c]),0x7e93aa);
+ const regionLine=segments(corners.map((c,i)=>[c,corners[(i+1)%4]]),0x3159e8);
  const frame=segments([[[0,.012,0],[.42,.012,0]],[[0,.012,0],[0,.012,.36]],[[0,.012,0],[0,.28,0]],
-  [[-.66,.012,-.12],[-.66,.012,.36]],[[-.66,.012,.36],[.46,.012,.36]]],0x9da48e);
- const viewpoint=segments([[sensor,[-.34,.78,.23]],[sensor,[-.43,.87,.23]],[sensor,[-.43,.78,.32]]],0x89937b);
+  [[-.66,.012,-.12],[-.66,.012,.36]],[[-.66,.012,.36],[.46,.012,.36]]],0xb3c7d9);
+ const viewpoint=segments([[sensor,[-.34,.78,.23]],[sensor,[-.43,.87,.23]],[sensor,[-.43,.78,.32]]],0x7e93aa);
  // Final connections inhabit this same world and can pass behind the real robot.
- const loopPaths=[0x7d8875,0xbc4d24,0xbc4d24,0x7d8875].map(color=>{
+ const loopPaths=[0x6d8196,0x3159e8,0x3159e8,0x6d8196].map(color=>{
   const geometry=new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(new Float32Array(65*3),3));
   const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color,transparent:true,opacity:0,depthTest:true,depthWrite:false}));
   line.visible=false;spatial.add(line);return line;
@@ -112,14 +117,17 @@ export async function startStage(){
   loopFingerprint.push(progress,line.material.opacity,...[0,32,64].flatMap(i=>[position.getX(i),position.getY(i),position.getZ(i)]));
  }
 
+ const backdrop=createAlgorithmBackdrop({host:$('algorithm-background'),requestRender:schedule});
  const loadMs=performance.now()-started;
  const chapters=Array.from(document.querySelectorAll('.chapter'));
  const name=$('identity').querySelector('h1'),heroCopy=$('identity').querySelector('.hero-copy');
  const savedStyles=new Map(chapters.map(el=>[el,el.getAttribute('style')]));
  let active='identity',firstFrameMs=0;
+ const stageSize={width:innerWidth,height:innerHeight};
  let fpsSample=null;
  gsap.registerPlugin(ScrollTrigger);
 
+ function setText(el,value){if(el.textContent!==value)el.textContent=value;}
  function schedule(){
   if(!queued&&!disposed&&!document.hidden){queued=true;requestAnimationFrame(draw);}
  }
@@ -136,43 +144,46 @@ export async function startStage(){
   spatial.visible=mode&&state.p>.12;
   camera.lookAt(target);camera.updateMatrixWorld();scene.updateMatrixWorld(true);
   if(mode){
-   const p=state.p,offset=clamp(scrollY-($('story').getBoundingClientRect().top+scrollY),0,trigger?trigger.end-trigger.start:0);
+   const p=state.p;
    const copy=copyAt(p),contract=ramp(p,0,.18),quiet=editorialAt(p);
+   backdrop.draw(p);
    active=chapters[copy.index].id;
    const type=$('shot-type'),word=type.firstElementChild;
-   type.dataset.shot=active;type.style.visibility=copy.index?'visible':'hidden';
+   type.dataset.shot=active;$('visual').dataset.chapter=active;type.style.visibility=copy.index?'visible':'hidden';
    const systemTitle=copy.index===4&&p>=.90;
-   word.textContent=systemTitle?'AI FOR SCIENCE':['','AGENT','PERCEPTION','EXECUTION','FEEDBACK'][copy.index];
+   setText(word,systemTitle?'AI FOR SCIENCE':['','AGENT','PERCEPTION','EXECUTION','FEEDBACK'][copy.index]);
    type.dataset.title=systemTitle?'system':'';
    $('visual').classList.toggle('payoff',p>.76);
-   type.style.clipPath='inset('+((1-copy.enter)*100)+'% 0 '+(copy.exit*100)+'% 0)';
-   if(copy.index===4){const enter=systemTitle?1-Math.pow(1-ramp(p,.94,.98),3):copy.enter;type.style.clipPath='inset('+((1-enter)*100)+'% 0 '+(systemTitle?0:100*ramp(p,.82,.89))+'% 0)';}
-   const lateral=active==='perception'?-1:1;
-   word.style.transform='translate('+lateral*((1-copy.enter)*110-copy.exit*95)+'px,'+((1-copy.enter)*35-copy.exit*45)+'px)';
+   // Short optical handoff, rather than clipping the entire viewport of copy.
+   const titleCopy=systemTitle?copyAt(p,{starts:[0,.90],enterDuration:.045,travel:16}):copy;
+   const titleExit=copy.index===4&&!systemTitle?1-copyAt(p,{starts:[0,.90],exitDuration:.07}).exit:1;
+   type.style.opacity=titleCopy.opacity*titleExit;
+   word.style.transform='translateY('+titleCopy.y+'px)';
    chapters.forEach((el,i)=>{
-    el.style.top=offset+'px';el.style.opacity=1;
+    el.style.opacity=1;
     if(i===0){
      el.style.visibility='visible';el.inert=false;el.removeAttribute('aria-hidden');
      name.style.transform='translateY('+(-Math.min(innerHeight*.09,innerHeight*.22-100)*contract)+'px) scale('+(1-.84*contract)+')';
-     heroCopy.style.clipPath='inset(0 0 '+(100*ramp(p,.045,.135))+'% 0)';
+     heroCopy.style.opacity=copyAt(p,{starts:[0,.135],exitDuration:.09}).index===0?copyAt(p,{starts:[0,.135],exitDuration:.09}).opacity:0;
      heroCopy.style.transform='translateY('+(-28*ramp(p,0,.135))+'px)';
      heroCopy.inert=p>=.135;heroCopy.setAttribute('aria-hidden',p>=.135);
     }else{
      const shown=i===copy.index;
-     el.style.visibility=shown?'visible':'hidden';el.style.opacity=1-quiet;
+     el.style.visibility=shown?'visible':'hidden';el.style.opacity=copy.opacity*(1-quiet);
      el.inert=!shown||quiet===1;el.setAttribute('aria-hidden',el.inert);
-     el.style.clipPath='inset('+((1-copy.enter)*100)+'% 0 '+(copy.exit*100)+'% 0)';
-     el.style.transform='translateY('+((1-copy.enter)*28-copy.exit*28)+'px)';
+     el.style.transform='translateY('+copy.y+'px)';
     }
    });
    updateWorld(p);
-   $('phase').textContent=['ADRIAN / AI FOR SCIENCE','01 / AGENT','02 / PERCEPTION','03 / EXECUTION','04 / DATA FEEDBACK'][copy.index];
-   $('progress').textContent=String(Math.round(p*100)).padStart(3,'0')+'%';$('progress-fill').style.width=p*100+'%';
+   setText($('phase'),['ADRIAN / AI FOR SCIENCE','01 / AGENT','02 / PERCEPTION','03 / EXECUTION','04 / DATA FEEDBACK'][copy.index]);
+   setText($('progress'),String(Math.round(p*100)).padStart(3,'0')+'%');$('progress-fill').style.width=p*100+'%';
   }
-  $('visual').dataset.state=JSON.stringify({p:state.p,scrollY,active,mode:mode?'desktop':'flow',camera:camera.position.toArray(),target:target.toArray(),robot:robot.position.toArray(),scale:state.scale,nameContract:ramp(state.p,0,.18),joints:joints.map((_,i)=>state['j'+(i+1)]),canvasCount:document.querySelectorAll('canvas').length,object:robot.uuid,spatial:spatialFingerprint,loop:loopFingerprint,loopClosed:state.p>=.94});
+  $('visual').dataset.state=JSON.stringify({p:state.p,scrollY,active,mode:mode?'desktop':'flow',camera:camera.position.toArray(),target:target.toArray(),robot:robot.position.toArray(),scale:state.scale,nameContract:ramp(state.p,0,.18),joints:joints.map((_,i)=>state['j'+(i+1)]),canvasCount:$('canvas-host').querySelectorAll('canvas').length,object:robot.uuid,spatial:spatialFingerprint,loop:loopFingerprint,loopClosed:state.p>=.94});
  }
  function updateWorld(p){
-  const rect=$('visual').getBoundingClientRect(),w=rect.width,h=rect.height;
+  // Projection uses the same measured dimensions as the renderer. ResizeObserver
+  // refreshes them; scrolling must not force a layout read after the copy writes.
+  const w=stageSize.width,h=stageSize.height;
   const reveal=ramp(p,.28,.43),resolve=ramp(p,.79,.96),inspection=ramp(p,.56,.63)*(1-ramp(p,.77,.86)),quiet=editorialAt(p);
   // All anchors share the robot's base transform and the actual camera projection.
   const project=v=>{point.set(...v).applyMatrix4(spatial.matrixWorld).project(camera);return[(point.x*.5+.5)*w,(-point.y*.5+.5)*h];};
@@ -186,8 +197,10 @@ export async function startStage(){
   const tip=[(point.x*.5+.5)*w,(-point.y*.5+.5)*h];
   spatialFingerprint=[goal,plan,view,regionPoint,base,output,tip].flat();
   function label(id,xy,dx,dy,amount){
-   const el=$(id);el.style.left=clamp(xy[0]+dx,w*.08,w*.86)+'px';el.style.top=clamp(xy[1]+dy,id==='planning'?h*(p>.76?.34:.43):h*.19,h*.88)+'px';
-   el.style.opacity=amount;el.style.transform='translateY('+(1-amount)*8+'px)';
+   const el=$(id);el.style.opacity=amount;
+   if(amount<=0)return;
+   el.style.left=clamp(xy[0]+dx,w*.08,w*.86)+'px';el.style.top=clamp(xy[1]+dy,id==='planning'?h*(p>.76?.34:.43):h*.19,h*.88)+'px';
+   el.style.transform='translateY('+(1-amount)*8+'px)';
   }
   const intent=ramp(p,.10,.19);
   label('planning',goal,-5,-15,resolve);
@@ -195,13 +208,14 @@ export async function startStage(){
   label('execution-node',base,32,-32,ramp(p,.79,.86));
   label('feedback-node',output,-65,12,resolve);
   const senseEnd=[tip[0]+(view[0]-tip[0])*reveal,tip[1]+(view[1]-tip[1])*reveal];
-  drawLink('planning-trace','M '+goal+' Q '+plan+' '+tip,ramp(p,.12,.30));
-  $('planning-trace').style.opacity=intent*(1-reveal)*.65;
-  drawLink('agent-perception','M '+goal+' Q '+returnPoint+' '+senseEnd,reveal);
-  $('agent-perception').style.opacity=reveal*resolve*.65;
-  drawLink('perception-execution','M '+regionPoint+' Q '+[regionPoint[0]+40,tip[1]+60]+' '+tip,ramp(p,.40,.65));
-  drawLink('execution-feedback','M '+base+' C '+[base[0],output[1]]+' '+[output[0]+80,output[1]]+' '+output,ramp(p,.79,.92));
-  drawLink('feedback-agent','M '+output+' C '+[returnPoint[0],output[1]]+' '+returnPoint+' '+goal,ramp(p,.87,1));
+  // Use final visibility before building SVG paths. Hidden close-up overlays
+  // resume from this exact progress on reveal, including reverse scrolling.
+  const svgOpacity=1-ramp(p,.76,.82),connection=ramp(p,.40,.65),execution=ramp(p,.79,.92),feedback=ramp(p,.87,1);
+  drawLink('planning-trace',()=> 'M '+goal+' Q '+plan+' '+tip,ramp(p,.12,.30),intent*(1-reveal)*.65*(1-quiet));
+  drawLink('agent-perception',()=> 'M '+goal+' Q '+returnPoint+' '+senseEnd,reveal,reveal*resolve*.65*svgOpacity);
+  drawLink('perception-execution',()=> 'M '+regionPoint+' Q '+[regionPoint[0]+40,tip[1]+60]+' '+tip,connection,(polished||(benchmark?.paired&&p<=.76))?0:(connection>0?svgOpacity:0));
+  drawLink('execution-feedback',()=> 'M '+base+' C '+[base[0],output[1]]+' '+[output[0]+80,output[1]]+' '+output,execution,execution>0?svgOpacity:0);
+  drawLink('feedback-agent',()=> 'M '+output+' C '+[returnPoint[0],output[1]]+' '+returnPoint+' '+goal,feedback,feedback>0?svgOpacity:0);
   corners.forEach((c,i)=>{volume.geometry.attributes.position.setXYZ(i*2,...senseLocal);volume.geometry.attributes.position.setXYZ(i*2+1,...c.map((v,k)=>senseLocal[k]+(v-senseLocal[k])*reveal));});
   viewpoint.position.y=senseLocal[1]-sensor[1];
   volume.geometry.attributes.position.needsUpdate=true;volume.material.opacity=.38*(1-.72*resolve)*(1-.75*inspection);
@@ -216,7 +230,6 @@ export async function startStage(){
    joints[5].getWorldPosition(localTip);spatial.worldToLocal(localTip);
    const tip3=localTip.toArray();
    worldPath(1,[region,[-.4,.32,.34],[tip3[0]-.12,tip3[1]-.06,tip3[2]+.12],tip3],ramp(p,.40,.65),.72);
-   $('perception-execution').style.opacity=0;
   }
   if(p>.76){
    const lift=ramp(p,.76,.82),secondary=1-.6*ramp(p,.76,.92);
@@ -226,17 +239,16 @@ export async function startStage(){
    worldPath(1,[region,[-.4,.32,.34],[tip3[0]-.12,tip3[1]-.06,tip3[2]+.12],tip3],1,.72*(polished?secondary:lift));
    worldPath(2,[tip3,[tip3[0]+.30,tip3[1]+.04,tip3[2]+.20],[.52,.12,.58],outputLocal],ramp(p,.80,.89),.70*lift*secondary);
    worldPath(3,[outputLocal,[-.10,.07,1.0],[-.94,.15,.75],goalLocal],ramp(p,.86,.94),.55*lift*(1-.35*resolve));
-   for(const id of ['agent-perception','perception-execution','execution-feedback','feedback-agent'])$(id).style.opacity*=1-lift;
-   if(polished)$('perception-execution').style.opacity=0;
    volume.material.opacity=.38*(1-.28*resolve)*(1-.75*inspection);
   }
   // A quiet editorial beat inside the same moving world; disclosures remain visible.
   for(const line of [volume,regionLine,frame,viewpoint])line.material.opacity*=1-quiet;
-  $('planning-trace').style.opacity*=1-quiet;
  }
- function drawLink(id,path,progress){
-  const el=$(id);el.setAttribute('d',path);el.setAttribute('pathLength','1');
-  el.style.strokeDasharray='1';el.style.strokeDashoffset=1-progress;el.style.opacity=progress>0?1:0;
+ function drawLink(id,path,progress,opacity){
+  const el=$(id);el.style.opacity=opacity;
+  if(opacity<=0)return;
+  el.setAttribute('d',path());el.setAttribute('pathLength','1');
+  el.style.strokeDasharray='1';el.style.strokeDashoffset=1-progress;
   el.setAttribute('marker-end',progress>.99?'url(#flow-arrow)':'');
  }
  function stopBenchmark(){
@@ -317,9 +329,12 @@ export async function startStage(){
  }
  function resize(){
   const rect=$('visual').getBoundingClientRect();if(!rect.width||!rect.height)return;
+  stageSize.width=rect.width;stageSize.height=rect.height;
+  backdrop.resize(rect.width,rect.height,devicePixelRatio);
   renderer.setPixelRatio(Math.min(devicePixelRatio,mode?1.5:1.25));renderer.setSize(rect.width,rect.height);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();schedule();
  }
  function clearChapters(){
+  delete $('visual').dataset.chapter;
   name.removeAttribute('style');heroCopy.removeAttribute('style');heroCopy.inert=false;heroCopy.removeAttribute('aria-hidden');
   chapters.forEach(el=>{const style=savedStyles.get(el);if(style===null)el.removeAttribute('style');else el.setAttribute('style',style);el.inert=false;el.removeAttribute('aria-hidden');});
  }
@@ -331,14 +346,13 @@ export async function startStage(){
   trigger?.kill();timeline?.kill();trigger=null;timeline=null;
   mode=desktop.matches&&!preference.matches&&!reading&&params.get('test')!=='reduced-motion';
   document.body.classList.toggle('desktop-stage',mode);
+  setRendering(polished);
+  backdrop.setEnabled(mode);
   clearChapters();Object.assign(state,KEYFRAMES[0]);
   if(mode){
-   timeline=gsap.timeline({paused:true,defaults:{ease:'none'},onUpdate:schedule});
-   for(let i=1;i<KEYFRAMES.length;i++){
-    const a=KEYFRAMES[i-1],b=KEYFRAMES[i],duration=b.p-a.p;
-    for(const keys of [['p'],['cx','cy','cz','tx','ty','tz'],['x','y','ry','j1','j2','j3','j4','j5','j6'],['scale','space']])
-     timeline.to(state,{...Object.fromEntries(keys.map(k=>[k,b[k]])),duration,ease:curveFor(keys[0],i)},a.p);
-   }
+   // One progress channel feeds the exact same sampler used by the audit.
+   timeline=gsap.timeline({paused:true,onUpdate(){Object.assign(state,stateAt(state.p));schedule();}});
+   timeline.to(state,{p:1,duration:1,ease:'none'});
    trigger=ScrollTrigger.create({trigger:'#story',start:'top top',end:'bottom bottom',scrub:true,animation:timeline,invalidateOnRefresh:true});
    ScrollTrigger.refresh();
   }
@@ -360,13 +374,13 @@ export async function startStage(){
  const sizeObserver=new ResizeObserver(resize);sizeObserver.observe($('visual'));
  renderer.domElement.addEventListener('webglcontextlost',event=>{
   event.preventDefault();stopBenchmark();
-  sizeObserver.disconnect();
+  sizeObserver.disconnect();backdrop.dispose();
   /* MOBILE_LITE_BEGIN */
   mobile?.dispose();mobile=null;document.body.classList.remove('mobile-stage');
   /* MOBILE_LITE_END */
   disposed=true;trigger?.kill();timeline?.kill();clearChapters();
   document.body.classList.remove('enhanced','desktop-stage');renderer.domElement.remove();
-  $('enhancement-status').textContent='3D 上下文已丢失，已恢复完整静态阅读。';$('motion-toggle').hidden=true;
+  document.dispatchEvent(new Event('portfolio:stage-lost'));
  });
  $('audit').addEventListener('click',()=>{
   /* MOBILE_LITE_BEGIN */
@@ -406,6 +420,7 @@ export async function startStage(){
   renderer.domElement.classList.add('mobile-enter');
  }
  /* MOBILE_LITE_END */
+ setRendering(polished,polished&&desktop.matches&&!preference.matches&&!reading&&params.get('test')!=='reduced-motion');
  renderer.setSize(innerWidth,innerHeight);robot.scale.setScalar(.001);camera.position.set(1.65,1.12,2.02);camera.lookAt(0,.5,0);renderer.render(scene,camera);
  $('canvas-host').appendChild(renderer.domElement);document.body.classList.add('enhanced');configure();
  return{
